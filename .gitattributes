@@ -1,0 +1,8 @@
+###############################################################################
+# Set default behavior to automatically normalize line endings.
+###############################################################################
+* text=auto eol=lf
+*.json text eol=lf
+
+# Les bats du coffre doivent garder leurs fins de ligne Windows (CRLF)
+docs/bats-valides/*.bat text eol=crlf

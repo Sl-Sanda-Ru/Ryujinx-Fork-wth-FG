@@ -1,0 +1,26 @@
+
+using System;
+using System.Globalization;
+
+namespace Ryujinx.Graphics.Shader.Translation
+{
+    public static class TileMapConstProbe
+    {
+        public static readonly float? Value = Parse();
+
+        public static bool Enabled => Value.HasValue;
+
+        private static float? Parse()
+        {
+            string raw = Environment.GetEnvironmentVariable("RYUJINX_TILEMAP_CONST");
+
+            if (raw != null &&
+                float.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
+            {
+                return value;
+            }
+
+            return null;
+        }
+    }
+}

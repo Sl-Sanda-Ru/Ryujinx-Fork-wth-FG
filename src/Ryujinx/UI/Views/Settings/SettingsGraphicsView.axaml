@@ -1,0 +1,484 @@
+<UserControl
+    x:Class="Ryujinx.Ava.UI.Views.Settings.SettingsGraphicsView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="clr-namespace:Ryujinx.Ava.UI.Controls"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:ext="clr-namespace:Ryujinx.Ava.Common.Markup"
+    xmlns:viewModels="clr-namespace:Ryujinx.Ava.UI.ViewModels"
+    Design.Width="1000"
+    mc:Ignorable="d"
+    x:DataType="viewModels:SettingsViewModel">
+    <Design.DataContext>
+        <viewModels:SettingsViewModel />
+    </Design.DataContext>
+    <ScrollViewer
+        Name="GraphicsPage"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <Border Classes="settings">
+            <StackPanel
+                Margin="10"
+                HorizontalAlignment="Stretch"
+                Orientation="Vertical"
+                Spacing="10">
+                <TextBlock Classes="h1" Text="{ext:Locale SettingsTabGraphicsAPI}" />
+                <StackPanel Margin="10,0,0,0" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                ToolTip.Tip="{ext:Locale SettingsTabGraphicsBackendTooltip}"
+                                Text="{ext:Locale SettingsTabGraphicsBackend}"
+                                Width="250" />
+                        <ComboBox Width="350"
+                                HorizontalContentAlignment="Left"
+                                ToolTip.Tip="{ext:Locale SettingsTabGraphicsBackendTooltip}"
+                                SelectedIndex="{Binding GraphicsBackendIndex}">
+                            <ComboBoxItem
+                                IsVisible="{Binding IsVulkanAvailable}"
+                                Content="Vulkan" />
+                            <ComboBoxItem
+                                IsEnabled="{Binding IsOpenGLAvailable}"
+                                Content="OpenGL" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" IsVisible="{Binding IsVulkanSelected}">
+                        <TextBlock VerticalAlignment="Center"
+                                ToolTip.Tip="{ext:Locale SettingsTabGraphicsPreferredGpuTooltip}"
+                                Text="{ext:Locale SettingsTabGraphicsPreferredGpu}"
+                                Width="250" />
+                        <ComboBox Width="350"
+                                HorizontalContentAlignment="Left"
+                                ToolTip.Tip="{ext:Locale SettingsTabGraphicsPreferredGpuTooltip}"
+                                SelectedIndex="{Binding PreferredGpuIndex}"
+                                ItemsSource="{Binding AvailableGpus}"/>
+                    </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="{ext:Locale GraphicsBackendThreadingTooltip}"
+                                       Text="{ext:Locale SettingsTabGraphicsBackendMultithreading}"
+                                       Width="250" />
+                            <ComboBox Width="350"
+                                      HorizontalContentAlignment="Left"
+                                      ToolTip.Tip="{ext:Locale GalThreadingTooltip}"
+                                      SelectedIndex="{Binding GraphicsBackendMultithreadingIndex}">
+                                <ComboBoxItem
+                                    Content="{ext:Locale CommonAuto}" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale CommonOff}" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale CommonOn}" />
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{ext:Locale SettingsTabGraphicsFeatures}" />
+                <StackPanel Margin="10,0,0,0" Orientation="Vertical" Spacing="10">
+                    <StackPanel Orientation="Vertical">
+                        <CheckBox IsChecked="{Binding EnableShaderCache}"
+                            ToolTip.Tip="{ext:Locale ShaderCacheToggleTooltip}">
+                            <TextBlock Text="{ext:Locale SettingsTabGraphicsEnableShaderCache}" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableTextureRecompression}"
+                            ToolTip.Tip="{ext:Locale SettingsEnableTextureRecompressionTooltip}">
+                            <TextBlock Text="{ext:Locale SettingsEnableTextureRecompression}" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableMacroHLE}"
+                            ToolTip.Tip="{ext:Locale SettingsEnableMacroHLETooltip}">
+                            <TextBlock Text="{ext:Locale SettingsEnableMacroHLE}" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableColorSpacePassthrough}"
+                                  IsVisible="{Binding ColorSpacePassthroughAvailable}"
+                            ToolTip.Tip="{ext:Locale SettingsEnableColorSpacePassthroughTooltip}">
+                            <TextBlock Text="{ext:Locale SettingsEnableColorSpacePassthrough}" />
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding EnableHdr}"
+                            ToolTip.Tip="Expands the SDR image to HDR via inverse tone mapping into an scRGB float swapchain — similar to Windows AutoHDR, but tuned to keep blacks black and only lift highlights. This is not native/per-game HDR: the game still renders in SDR. Only engages on an HDR-capable display with HDR enabled in the OS; SDR displays are unaffected. Vulkan only.">
+                            <TextBlock Text="Enable HDR (experimental)" />
+                        </CheckBox>
+                        <StackPanel Orientation="Horizontal" Margin="24,4,0,0" IsVisible="{Binding EnableHdr}">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="Brightness of reference white (UI, paper, diffuse surfaces), in nits. Higher = brighter overall image."
+                                       Text="HDR paper white"
+                                       Width="226" />
+                            <controls:SliderScroll Value="{Binding HdrPaperWhite}"
+                                    MinWidth="150"
+                                    Margin="10,-3,0,0"
+                                    Height="32"
+                                    Padding="0,-5"
+                                    TickFrequency="5"
+                                    IsSnapToTickEnabled="True"
+                                    LargeChange="20"
+                                    SmallChange="5"
+                                    VerticalAlignment="Center"
+                                    Minimum="80"
+                                    Maximum="400" />
+                            <TextBlock Margin="5,0"
+                                       Width="70"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding HdrPaperWhiteText}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="24,4,0,0" IsVisible="{Binding EnableHdr}">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="Peak highlight brightness target, in nits. Only the brightest parts of the image are pushed toward this; blacks stay black. Set near your display's peak."
+                                       Text="HDR peak brightness"
+                                       Width="226" />
+                            <controls:SliderScroll Value="{Binding HdrPeakBrightness}"
+                                    MinWidth="150"
+                                    Margin="10,-3,0,0"
+                                    Height="32"
+                                    Padding="0,-5"
+                                    TickFrequency="10"
+                                    IsSnapToTickEnabled="True"
+                                    LargeChange="100"
+                                    SmallChange="10"
+                                    VerticalAlignment="Center"
+                                    Minimum="200"
+                                    Maximum="2000" />
+                            <TextBlock Margin="5,0"
+                                       Width="70"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding HdrPeakBrightnessText}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="24,4,0,0" IsVisible="{Binding EnableHdr}">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="How far down the brightness range the highlight 'pop' reaches. Low = only near-white (UI, sun) pops; high = the whole bright scene (sky, sunlit surfaces) pops in gameplay. Blacks always stay black."
+                                       Text="HDR intensity"
+                                       Width="226" />
+                            <controls:SliderScroll Value="{Binding HdrIntensity}"
+                                    MinWidth="150"
+                                    Margin="10,-3,0,0"
+                                    Height="32"
+                                    Padding="0,-5"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    LargeChange="10"
+                                    SmallChange="1"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="100" />
+                            <TextBlock Margin="5,0"
+                                       Width="70"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding HdrIntensityText}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="24,4,0,0" IsVisible="{Binding EnableHdr}">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="SDR decode gamma. Higher = deeper blacks (more cinematic) on OLED; lower = more shadow detail. 2.20 is the standard default."
+                                       Text="HDR gamma"
+                                       Width="226" />
+                            <controls:SliderScroll Value="{Binding HdrGamma}"
+                                    MinWidth="150"
+                                    Margin="10,-3,0,0"
+                                    Height="32"
+                                    Padding="0,-5"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    LargeChange="10"
+                                    SmallChange="1"
+                                    VerticalAlignment="Center"
+                                    Minimum="200"
+                                    Maximum="280" />
+                            <TextBlock Margin="5,0"
+                                       Width="70"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding HdrGammaText}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="24,4,0,0" IsVisible="{Binding EnableHdr}">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="How strongly coloured lights (neon, fire, sun) use the peak brightness. Low = calmer, whiter highlights; high = more colourful but can look flashy. 50 is balanced."
+                                       Text="HDR colour boost"
+                                       Width="226" />
+                            <controls:SliderScroll Value="{Binding HdrHighlightMix}"
+                                    MinWidth="150"
+                                    Margin="10,-3,0,0"
+                                    Height="32"
+                                    Padding="0,-5"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    LargeChange="10"
+                                    SmallChange="1"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="100" />
+                            <TextBlock Margin="5,0"
+                                       Width="70"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding HdrHighlightMixText}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="24,4,0,0" IsVisible="{Binding EnableHdr}">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="Whitens the very brightest highlights (sun, fire, neon) so they read as light rather than a harsh saturated colour. 0 = old look (keep colour); higher = more whitening at the top."
+                                       Text="HDR highlight whitening"
+                                       Width="226" />
+                            <controls:SliderScroll Value="{Binding HdrHighlightWhiten}"
+                                    MinWidth="150"
+                                    Margin="10,-3,0,0"
+                                    Height="32"
+                                    Padding="0,-5"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    LargeChange="10"
+                                    SmallChange="1"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="100" />
+                            <TextBlock Margin="5,0"
+                                       Width="70"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding HdrHighlightWhitenText}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{ext:Locale ResolutionScaleTooltip}"
+                                   Text="{ext:Locale SettingsTabGraphicsResolutionScale}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding ResolutionScale}"
+                                  Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  ToolTip.Tip="{ext:Locale ResolutionScaleTooltip}">
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsResolutionScaleNative}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsResolutionScale2x}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsResolutionScale3x}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsResolutionScale4x}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsResolutionScaleCustom}" />
+                        </ComboBox>
+                        <ui:NumberBox
+                            Margin="10,0,0,0"
+                            ToolTip.Tip="{ext:Locale ResolutionScaleEntryTooltip}"
+                            MinWidth="150"
+                            SmallChange="0.1"
+                            LargeChange="1"
+                            SimpleNumberFormat="F2"
+                            SpinButtonPlacementMode="Inline"
+                            IsVisible="{Binding IsCustomResolutionScaleActive}"
+                            Maximum="100"
+                            Minimum="0.1"
+                            Value="{Binding CustomResolutionScale}" />
+                    </StackPanel>
+                    <StackPanel
+                        HorizontalAlignment="Stretch"
+                        Orientation="Vertical"
+                        Spacing="10">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="{ext:Locale GraphicsAATooltip}"
+                                       Text="{ext:Locale GraphicsAALabel}"
+                                       Width="250" />
+                            <ComboBox Width="350"
+                                      HorizontalContentAlignment="Left"
+                                      ToolTip.Tip="{ext:Locale GraphicsAATooltip}"
+                                      SelectedIndex="{Binding AntiAliasingEffect}">
+                                <ComboBoxItem
+                                    Content="{ext:Locale SettingsTabLoggingGraphicsBackendLogLevelNone}" />
+                                <ComboBoxItem
+                                    Content="FXAA" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale SmaaLow}" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale SmaaMedium}" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale SmaaHigh}" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale SmaaUltra}" />
+                                <ComboBoxItem
+                                    Content="TAA" />
+                            </ComboBox>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel
+                        HorizontalAlignment="Stretch"
+                        Orientation="Vertical"
+                        Spacing="10">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center"
+                                       ToolTip.Tip="{ext:Locale GraphicsScalingFilterTooltip}"
+                                       Text="{ext:Locale GraphicsScalingFilterLabel}"
+                                       Width="250" />
+                            <ComboBox Width="350"
+                                      HorizontalContentAlignment="Left"
+                                      ToolTip.Tip="{ext:Locale GraphicsScalingFilterTooltip}"
+                                      SelectedIndex="{Binding ScalingFilter}">
+                                <ComboBoxItem
+                                    Content="{ext:Locale GraphicsScalingFilterBilinear}" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale GraphicsScalingFilterNearest}" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale GraphicsScalingFilterFsr}" />
+                                <ComboBoxItem
+                                    Content="{ext:Locale GraphicsScalingFilterArea}" />
+                                <ComboBoxItem
+                                    Content="NIS" />
+                                <ComboBoxItem
+                                    Content="DLSS" />
+                            </ComboBox>
+                            <controls:SliderScroll Value="{Binding ScalingFilterLevel}"
+                                    ToolTip.Tip="{ext:Locale GraphicsScalingFilterLevelTooltip}"
+                                    MinWidth="150"
+                                    Margin="10,-3,0,0"
+                                    Height="32"
+                                    Padding="0,-5"
+                                    IsVisible="{Binding IsScalingFilterActive}"
+                                    TickFrequency="1"
+                                    IsSnapToTickEnabled="True"
+                                    LargeChange="10"
+                                    SmallChange="1"
+                                    VerticalAlignment="Center"
+                                    Minimum="0"
+                                    Maximum="100" />
+                            <TextBlock Margin="5,0"
+                                       Width="40"
+                                       IsVisible="{Binding IsScalingFilterActive}"
+                                       Text="{Binding ScalingFilterLevelText}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="NVIDIA DLSS / DLAA (RTX). Reconstruction par IA. S'applique au prochain lancement de l'app. / AI reconstruction; applied on next app launch."
+                                   Text="NVIDIA DLSS / DLAA (experimental)"
+                                   Width="250" />
+                        <ComboBox Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  IsEnabled="{Binding IsDlssMenuEnabled}"
+                                  SelectedIndex="{Binding DlssMode}">
+                            <ComboBoxItem Content="Off" />
+                            <ComboBoxItem Content="DLAA" />
+                            <ComboBoxItem Content="Quality" />
+                            <ComboBoxItem Content="Balanced" />
+                            <ComboBoxItem Content="Performance" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="Preset du modèle DLSS (choix libre, s'applique au prochain lancement) : K = défaut ; M = transformer récent (feuillage plus propre) ; L/J = variantes transformer ; F = CNN ultra-stable. / DLSS model preset (your choice, applied on next launch): K = default; M = newer transformer (cleaner foliage); L/J = transformer variants; F = ultra-stable CNN."
+                                   Text="DLSS Model Preset"
+                                   Width="250" />
+                        <ComboBox Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  IsEnabled="{Binding IsDlssMenuEnabled}"
+                                  SelectedIndex="{Binding DlssPresetIndex}">
+                            <ComboBoxItem Content="Preset K (Transformer — défaut / default)" />
+                            <ComboBoxItem Content="Preset M (Transformer — récent / newest)" />
+                            <ComboBoxItem Content="Preset L (Transformer)" />
+                            <ComboBoxItem Content="Preset J (Transformer)" />
+                            <ComboBoxItem Content="Preset F (CNN — ultra-stable)" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="DLSS Frame Generation (RTX 40/50, nvngx_dlssg.dll requis / required). Génère des images supplémentaires pour un affichage 2x ou 3x plus fluide. S'applique au prochain lancement. / Generates extra frames for a 2x or 3x smoother display; applied on next app launch."
+                                   Text="DLSS Frame Generation"
+                                   Width="250" />
+                        <ComboBox Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  IsEnabled="{Binding IsDlssFrameGenMenuEnabled}"
+                                  SelectedIndex="{Binding DlssFgIndex}">
+                            <ComboBoxItem Content="Off" />
+                            <ComboBoxItem Content="2x" />
+                            <ComboBoxItem Content="3x" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="Netteté appliquée après le DLSS (RCAS, comme le filtre FSR). 0 = désactivée. Trop haut = halos et scintillement en mouvement. S'applique au prochain lancement. / Sharpening applied after DLSS (RCAS, same as the FSR filter). 0 = off. Too high = halos and shimmer in motion. Applied on next app launch."
+                                   Text="DLSS Sharpening"
+                                   Width="250" />
+                        <Slider Width="300"
+                                Minimum="0"
+                                Maximum="100"
+                                TickFrequency="5"
+                                IsSnapToTickEnabled="True"
+                                IsEnabled="{Binding IsDlssMenuEnabled}"
+                                Value="{Binding DlssSharpenLevel}" />
+                        <TextBlock VerticalAlignment="Center"
+                                   Margin="10,0,0,0"
+                                   Width="40"
+                                   Text="{Binding DlssSharpenLevel}" />
+                    </StackPanel>
+                    <CheckBox IsChecked="{Binding EnableFsrFrameGen}"
+                              IsEnabled="{Binding IsFsrFrameGenMenuEnabled}"
+                              ToolTip.Tip="AMD FSR Frame Generation (FidelityFX, toutes cartes Vulkan — pas besoin de RTX). Interpole une image supplémentaire entre deux images rendues : le jeu continue de tourner à son rythme, mais deux fois plus d'images atteignent l'écran. Exclusif avec DLSS Frame Generation : les deux ne peuvent pas partager le swapchain, et FSR gagne. Force la VSync hôte sur Immediate. amd_fidelityfx_vk.dll doit être dans le dossier fsr\. S'applique au prochain lancement.&#10;&#10;Interpolates one extra frame between two rendered ones: the game still runs at its own pace, but twice as many frames reach the screen. Mutually exclusive with DLSS Frame Generation — the two cannot share the swapchain, and FSR wins. Forces the host present mode to Immediate. Needs amd_fidelityfx_vk.dll in the fsr\ folder. Applied on next app launch.">
+                        <TextBlock Text="AMD FSR Frame Generation (experimental)" />
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding EnableDofSkip}"
+                              ToolTip.Tip="CE QUE ÇA FAIT&#10;• Suivi de caméra renforcé : lecture de la caméra même quand le jeu la range ailleurs que d'habitude, rejet des matrices trompeuses (ciel, reflets), tolérance aux téléportations et aux changements de plan.&#10;• Vecteurs de mouvement plus propres : le tremblement d'échantillonnage n'est plus confondu avec du mouvement réel, et la dérive du ciel n'est mesurée que caméra calme.&#10;&#10;EXPÉRIMENTAL : validé sur une seule famille de moteur (Xenoblade Chronicles 2). Sur d'autres configurations, il peut au contraire ajouter du tremblement en mouvement — si c'est le cas, décochez.&#10;Le code reste GÉNÉRIQUE : tout est reconnu par la forme du pipeline, jamais par le nom d'un jeu.&#10;Décochée par défaut. S'applique au prochain lancement.&#10;&#10;WHAT THIS DOES&#10;• Stronger camera tracking: reads the camera even when a game stores it in an unusual place, rejects misleading matrices (sky, reflections), tolerates teleports and scene cuts.&#10;• Cleaner motion vectors: the sampling jitter is no longer mistaken for real motion, and sky drift is only measured while the camera is calm.&#10;&#10;EXPERIMENTAL: validated on one engine family only (Xenoblade Chronicles 2). On other setups it can add trembling in motion instead — if it does, untick it.&#10;The code stays GENERIC: everything is matched by pipeline shape, never by game name.&#10;Off by default. Applied on next app launch.">
+                        <TextBlock Text="Advanced motion stack (experimental)" />
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding EnableForceMips}"
+                              ToolTip.Tip="Fabrique les chaînes de mipmaps que beaucoup de jeux n'ont pas : supprime le scintillement des textures lointaines à l'upscale. Générique, automatique, s'applique au prochain lancement. / Builds the mipmap chains many games ship without, removing distant texture shimmer when upscaling. Generic, automatic, applied on next app launch.">
+                        <TextBlock Text="Runtime mipmap generation (experimental)" />
+                    </CheckBox>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{ext:Locale AnisotropyTooltip}"
+                                   Text="{ext:Locale SettingsTabGraphicsAnisotropicFiltering}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding MaxAnisotropy}"
+                                  Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  ToolTip.Tip="{ext:Locale AnisotropyTooltip}">
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAnisotropicFilteringAuto}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAnisotropicFiltering2x}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAnisotropicFiltering4x}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAnisotropicFiltering8x}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAnisotropicFiltering16x}" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="{ext:Locale AspectRatioTooltip}"
+                                   Text="{ext:Locale SettingsTabGraphicsAspectRatio}"
+                                   Width="250" />
+                        <ComboBox SelectedIndex="{Binding AspectRatio}"
+                                  Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  ToolTip.Tip="{ext:Locale AspectRatioTooltip}">
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAspectRatio4x3}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAspectRatio16x9}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAspectRatio16x10}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAspectRatio21x9}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAspectRatio32x9}" />
+                            <ComboBoxItem
+                                Content="{ext:Locale SettingsTabGraphicsAspectRatioStretch}" />
+                        </ComboBox>
+                    </StackPanel>
+                </StackPanel>
+ 
+                <Separator Height="1" />
+                <TextBlock Classes="h1" Text="{ext:Locale SettingsTabGraphicsDeveloperOptions}" />
+                <StackPanel
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical"
+                    Spacing="10">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{ext:Locale SettingsTabGraphicsShaderDumpPath}"
+                                   Width="250" />
+                        <TextBox Text="{Binding ShaderDumpPath}"
+                                 Width="350" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,139 @@
+# Builds amd_fidelityfx_vk.dll from the SushiFX fork of AMD's FidelityFX SDK.
+#
+# Why: AMD's signed Vulkan DLL declares poolSizeCount = 5 for a six-entry
+# VkDescriptorPoolSize array (sdk/src/backends/vk/ffx_vk.cpp), so the
+# VK_DESCRIPTOR_TYPE_STORAGE_BUFFER entry gets no pool capacity. Upscaling declares no
+# buffers and is unaffected; frame interpolation declares FI_Counters, whose descriptor is
+# then unbacked while every call still returns success. SushiFX commit 0457c0a fixes it, and
+# the fix cannot be applied to the signed binary, so the DLL has to be built from source.
+#
+# 1.1.4 is the last FidelityFX release with a Vulkan backend; SDK 2.x is DirectX 12 only.
+
+name: Build FidelityFX Vulkan DLL
+
+on:
+  workflow_dispatch:
+    inputs:
+      sushifx_ref:
+        description: SushiFX ref to build
+        default: main
+      upstream_commit:
+        description: AMD FidelityFX-SDK commit holding the shader compiler libs (1.1.4)
+        default: c6efa6bf7f2027b3ec94f28578bb5965eabb9e55
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      # Cloned to a short path on purpose: AMD's own docs warn that the SDK's deeply nested
+      # shader permutation paths overrun MAX_PATH from a normal workspace directory.
+      - name: Clone SushiFX
+        run: git clone --depth 1 --branch "${{ inputs.sushifx_ref }}" https://github.com/SushiSystems/SushiFX.git C:\sfx
+
+      # The fork ignores these prebuilt tool binaries; upstream commits them. Taking them from
+      # the commit SushiFX forked from keeps the shader compiler's inputs consistent with its
+      # sources, and is a few MB instead of the 450 MB release archive.
+      - name: Fetch shader compiler libs from upstream
+        run: |
+          git clone --filter=blob:none --no-checkout --depth 1 https://github.com/GPUOpen-LibrariesAndSDKs/FidelityFX-SDK.git C:\ffxup
+          cd C:\ffxup
+          git fetch --depth 1 origin "${{ inputs.upstream_commit }}"
+          git sparse-checkout init --cone
+          git sparse-checkout set sdk/tools/ffx_shader_compiler/libs sdk/tools/binary_store
+          git checkout FETCH_HEAD
+          # /XC /XN /XO copies only files that are absent, so nothing the fork ships is replaced.
+          robocopy C:\ffxup\sdk\tools\ffx_shader_compiler\libs C:\sfx\sdk\tools\ffx_shader_compiler\libs /E /XC /XN /XO /NFL /NDL /NJH /NJS /NP
+          robocopy C:\ffxup\sdk\tools\binary_store C:\sfx\sdk\tools\binary_store /E /XC /XN /XO /NFL /NDL /NJH /NJS /NP
+          if ($LASTEXITCODE -ge 8) { exit 1 } else { exit 0 }
+
+      # 1.1.4 fails to configure on CMake 3.31+, and windows-latest ships a newer one.
+      - name: Install CMake 3.30
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: "3.30.5"
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@v5
+
+      # 1.1.4 requires 1.3.250 or newer. Pinned to a version LunarG still serves: they prune
+      # old installers, and every 1.3.x has been removed, so a 1.3.x pin fails to download.
+      # Omitting vulkan_version takes whatever is newest, which makes the build non-reproducible.
+      - name: Install Vulkan SDK
+        uses: jakoch/install-vulkan-sdk-action@v1
+        with:
+          vulkan_version: 1.4.313.2
+          install_runtime: false
+          cache: true
+
+      # Ninja needs cl.exe and the Windows SDK on PATH; this populates the MSVC environment.
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # dispatchInterpolationCommands picks the family to hand the interpolation output to, but tests
+      # eComposeOnPresentQueue twice, so in eComposeOnGameQueue mode the family stays 0xffffffff
+      # (VK_QUEUE_FAMILY_IGNORED). Every interpolated frame then records an ownership transfer from
+      # the interpolation family to IGNORED, which is invalid. That mode is picked whenever the
+      # present family lacks graphics -- an Intel GPU, whose second queue family is compute-only.
+      # Present in upstream 1.1.4 and in SushiFX.
+      - name: Patch composition queue family selection
+        working-directory: C:\sfx
+        run: |
+          $file = 'sdk\src\backends\vk\FrameInterpolationSwapchain\FrameInterpolationSwapchainVK.cpp'
+          $text = [IO.File]::ReadAllText($file)
+          $pattern = '(?s)(compositionQueueFamily = presentInfo\.presentQueue\.familyIndex;\s*\}\s*else if \(presentInfo\.compositionMode == FGSwapchainCompositionMode::)eComposeOnPresentQueue(\)\s*\{\s*compositionQueueFamily = presentInfo\.gameQueue\.familyIndex;)'
+          $found = [regex]::Matches($text, $pattern).Count
+          if ($found -ne 1) { throw "Expected the composition family bug exactly once, found $found." }
+          $text = [regex]::Replace($text, $pattern, '${1}eComposeOnGameQueue${2}')
+          [IO.File]::WriteAllText($file, $text)
+          Write-Host "Patched $file"
+
+      - name: Configure
+        working-directory: C:\sfx
+        run: cmake -S ffx-api -B build/api -G Ninja -DCMAKE_BUILD_TYPE=Release -DFFX_API_BACKEND=VK_X64
+
+      - name: Build
+        working-directory: C:\sfx
+        run: cmake --build build/api
+
+      # AMD's signed 1.1.4 DLL hashes to a1624cc4...; a different hash is what proves this is a
+      # local build carrying the fix rather than the shipped binary copied through.
+      - name: Verify output
+        working-directory: C:\sfx
+        run: |
+          $dll = Get-ChildItem -Recurse -Filter amd_fidelityfx_vk.dll |
+                 Where-Object { $_.FullName -notmatch 'PrebuiltSignedDLL' } |
+                 Select-Object -First 1
+          if (-not $dll) { throw "amd_fidelityfx_vk.dll was not produced" }
+          $hash = (Get-FileHash $dll.FullName -Algorithm SHA256).Hash.ToLower()
+          Write-Host "built: $($dll.FullName)"
+          Write-Host "size:  $($dll.Length) bytes"
+          Write-Host "sha256: $hash"
+          if ($hash -eq 'a1624cc4238fef046f30c4d80ce3f47be63fc5f5373f49e3ee9edb9960f54c78') {
+            throw "This is AMD's signed binary, not a fresh build - the fix is not in it."
+          }
+          New-Item -ItemType Directory -Force -Path C:\out | Out-Null
+          Copy-Item $dll.FullName C:\out\
+          if (Test-Path "$($dll.DirectoryName)\amd_fidelityfx_vk.pdb") {
+            Copy-Item "$($dll.DirectoryName)\amd_fidelityfx_vk.pdb" C:\out\
+          }
+
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: amd_fidelityfx_vk-sushifx
+          path: C:\out\*
+          if-no-files-found: error
+
+      # Kept so a configure or shader-compile failure can be diagnosed without a re-run.
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            C:\sfx\build\api\CMakeFiles\CMakeOutput.log
+            C:\sfx\build\api\CMakeFiles\CMakeError.log
+          if-no-files-found: ignore
