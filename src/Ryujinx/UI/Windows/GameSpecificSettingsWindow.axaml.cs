@@ -47,7 +47,7 @@ namespace Ryujinx.Ava.UI.Windows
             if (ViewModel.DlssModeRestartPending && !ViewModel.IsGameRunning)
             {
                 ViewModel.DlssModeRestartPending = false;
-                SettingsWindow.PromptDlssRestart();
+                SettingsWindow.RestartToApplyUpscalerSettings();
             }
         }
 

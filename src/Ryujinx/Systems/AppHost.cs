@@ -761,6 +761,13 @@ namespace Ryujinx.Ava.Systems
         {
             DiscordIntegrationModule.GuestAppStartedAt = Timestamps.Now;
 
+            // Upscaler and frame generation settings are re-read here, before the renderer and GPU
+            // context are built, so a change made in the settings since the last game applies now
+            // rather than after an app restart.
+            DlssUiSettings.Reapply();
+            Graphics.Gpu.ProfileSettings.Reload();
+            Graphics.Vulkan.ProfileSettings.Reload();
+
             InitEmulatedSwitch();
             MainWindow.UpdateGraphicsConfig();
 
@@ -1295,6 +1302,17 @@ namespace Ryujinx.Ava.Systems
                     _ => "DLAA",
                 };
             }
+            else if (Graphics.Vulkan.FsrFg.Fsr3UpscaleStatus.Active)
+            {
+                dlss = Graphics.Vulkan.Dlss.DlssIntegration.Mode switch
+                {
+                    Graphics.Vulkan.Dlss.DlssQualityMode.Quality => "FSR3 Q",
+                    Graphics.Vulkan.Dlss.DlssQualityMode.Balanced => "FSR3 B",
+                    Graphics.Vulkan.Dlss.DlssQualityMode.Performance => "FSR3 P",
+                    Graphics.Vulkan.Dlss.DlssQualityMode.UltraPerformance => "FSR3 UP",
+                    _ => "FSR3 NAA",
+                };
+            }
 
             UpdatePerformanceOverlay();
 
@@ -1354,6 +1372,13 @@ namespace Ryujinx.Ava.Systems
 
             string text = string.Create(CultureInfo.InvariantCulture,
                 $"GAME {gameFps:0} FPS  {Device.Statistics.GetGameFrameTime():0.0} MS\nDISPLAY {displayFps:0} FPS{source}");
+
+            string resolution = Graphics.Vulkan.PerformanceOverlay.ResolutionLine;
+
+            if (resolution.Length != 0)
+            {
+                text += "\n" + resolution;
+            }
 
             Graphics.Vulkan.PerformanceOverlay.SetText(text);
         }

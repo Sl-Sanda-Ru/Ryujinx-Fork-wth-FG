@@ -40,7 +40,7 @@ namespace Ryujinx.Ava.Systems
             {
                 foreach (string name in startInfo.Environment.Keys
                     .Where(k => k.StartsWith("RYUJINX_DLSS") || k.StartsWith("RYUJINX_MVPP_") || k == "RYUJINX_HDR_PQ" ||
-                                k.StartsWith("RYUJINX_FSR_FG"))
+                                k.StartsWith("RYUJINX_FSR_FG") || k.StartsWith("RYUJINX_FSR_UPSCALE"))
                     .ToArray())
                 {
                     startInfo.Environment.Remove(name);

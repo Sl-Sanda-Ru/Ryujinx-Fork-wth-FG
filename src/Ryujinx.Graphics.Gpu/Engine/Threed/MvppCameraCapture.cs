@@ -94,8 +94,23 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private static int _probeFrames;
         private static long _probeLogMs;
 
-        private static readonly bool _fifoMode =
+        private static bool _fifoMode =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_VPFIFO") == "1";
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            _enabled = Environment.GetEnvironmentVariable("RYUJINX_MVPP_CAP") == "1";
+            {
+                _fifoMode = Environment.GetEnvironmentVariable("RYUJINX_MVPP_VPFIFO") == "1";
+            }
+
+            DlssCameraState.Enabled = _enabled;
+            DlssCameraState.FifoEnabled = _enabled && _fifoMode;
+        }
 
         private static bool _hasSoloPushed;
         private static Matrix4x4 _lastSoloPushed;

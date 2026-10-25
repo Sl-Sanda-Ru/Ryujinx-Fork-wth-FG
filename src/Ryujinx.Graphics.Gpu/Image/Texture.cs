@@ -50,9 +50,9 @@ namespace Ryujinx.Graphics.Gpu.Image
         private static long _mipProbeSummaryMs;
         private bool _mipProbed;
 
-        private static readonly bool _forceMips =
+        private static bool _forceMips =
             System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS") == "1";
-        private static readonly int _forceMipsExtraLevels =
+        private static int _forceMipsExtraLevels =
             int.TryParse(System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS_LEVELS"), out int fmLevels)
                 ? Math.Clamp(fmLevels, 1, 12)
                 : 4;
@@ -65,10 +65,31 @@ namespace Ryujinx.Graphics.Gpu.Image
         private static int _forceMipsRtDemotes;
         private bool _forceMipsRtDemoted;
 
-        private static readonly int _forceMipsRefreshMs =
+        private static int _forceMipsRefreshMs =
             int.TryParse(System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS_REFRESH_MS"), out int fmRefresh)
                 ? Math.Max(0, fmRefresh)
                 : 0;
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                _forceMips = System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS") == "1";
+            }
+            {
+                _forceMipsExtraLevels = int.TryParse(System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS_LEVELS"), out int fmLevels)
+                    ? Math.Clamp(fmLevels, 1, 12)
+                    : 4;
+            }
+            {
+                _forceMipsRefreshMs = int.TryParse(System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS_REFRESH_MS"), out int fmRefresh)
+                    ? Math.Max(0, fmRefresh)
+                    : 0;
+            }
+        }
 
         private static readonly bool _mipDump =
             System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_MIPDUMP") == "1";

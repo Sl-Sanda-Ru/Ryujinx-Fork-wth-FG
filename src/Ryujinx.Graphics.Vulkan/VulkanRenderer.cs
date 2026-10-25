@@ -49,8 +49,19 @@ namespace Ryujinx.Graphics.Vulkan
 
         // DLSS-FG and FSR-FG both replace the swapchain, so only one may arm. An explicit FSR-FG
         // opt-in wins, otherwise DLSS-FG would claim the swapchain and FSR-FG would stand down.
-        private static readonly bool _fsrFgRequested =
+        private static bool _fsrFgRequested =
             Environment.GetEnvironmentVariable("RYUJINX_FSR_FG") == "1";
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                _fsrFgRequested = Environment.GetEnvironmentVariable("RYUJINX_FSR_FG") == "1";
+            }
+        }
         internal ExtConditionalRendering ConditionalRenderingApi { get; private set; }
         internal ExtExtendedDynamicState ExtendedDynamicStateApi { get; private set; }
         internal KhrPushDescriptor PushDescriptorApi { get; private set; }
@@ -1030,7 +1041,9 @@ namespace Ryujinx.Graphics.Vulkan
 
         private void ProbeDlssSupport()
         {
-            if (!Dlss.DlssIntegration.IsEnabled || Vendor != Vendor.Nvidia)
+            // FSR 3.1 needs nothing from Streamline, and starting it anyway would cost a cold restart
+            // every time a game closes, since Streamline can only initialise once per process.
+            if (!Dlss.DlssIntegration.IsEnabled || Vendor != Vendor.Nvidia || global::Ryujinx.Graphics.Vulkan.FsrFg.Fsr3Upscaler.Requested)
             {
                 return;
             }

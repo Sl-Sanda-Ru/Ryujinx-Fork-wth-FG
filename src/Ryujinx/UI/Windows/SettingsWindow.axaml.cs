@@ -61,29 +61,18 @@ namespace Ryujinx.Ava.UI.Windows
             if (ViewModel.DlssModeRestartPending && !ViewModel.IsGameRunning)
             {
                 ViewModel.DlssModeRestartPending = false;
-                PromptDlssRestart();
+                RestartToApplyUpscalerSettings();
             }
         }
 
-        internal static void PromptDlssRestart()
+        /// <summary>
+        /// Relaunches straight away to apply an upscaler or frame generation setting that is only
+        /// read when the process starts. Mode and sharpening changes apply in place and never get
+        /// here; the settings that do were made with no game running, so nothing is lost.
+        /// </summary>
+        internal static void RestartToApplyUpscalerSettings()
         {
-            _ = Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
-                {
-                    UserResult result = await ContentDialogHelper.CreateConfirmationDialog(
-                        "Mode DLSS modifié / DLSS mode changed",
-                        $"Le mode s'applique au redémarrage. Redémarrer {RyujinxApp.FullAppName} maintenant ? / The mode applies on restart. Restart {RyujinxApp.FullAppName} now?",
-                        LocaleManager.Instance[LocaleKeys.InputDialogYes],
-                        LocaleManager.Instance[LocaleKeys.InputDialogNo],
-                        string.Empty);
-
-                    if (result == UserResult.Yes)
-                    {
-                        Ryujinx.Ava.Systems.DlssRestart.RestartCold(applyUiMode: true);
-                    }
-                }
-            });
+            _ = Dispatcher.UIThread.InvokeAsync(() => Ryujinx.Ava.Systems.DlssRestart.RestartCold(applyUiMode: true));
         }
 
         private void Load()

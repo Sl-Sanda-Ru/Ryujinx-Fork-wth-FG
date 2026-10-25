@@ -480,6 +480,12 @@ namespace Ryujinx.Ava.UI.ViewModels
 
         private const int DlssScalingIndex = 5;
 
+        /// <summary>
+        /// AMD FSR 3.1. Like DLSS it is not a GPU scaling filter of its own: it stores Bilinear and
+        /// drives the temporal upscaling pipeline through the saved mode instead.
+        /// </summary>
+        private const int Fsr3ScalingIndex = 6;
+
         public int ScalingFilter
         {
             get => _scalingFilter;
@@ -491,12 +497,23 @@ namespace Ryujinx.Ava.UI.ViewModels
                 OnPropertyChanged(nameof(IsDlssSelected));
                 OnPropertyChanged(nameof(IsDlssMenuEnabled));
                 OnPropertyChanged(nameof(IsDlssFrameGenMenuEnabled));
+                OnPropertyChanged(nameof(IsFsr3Selected));
+                OnPropertyChanged(nameof(IsFsr3MenuEnabled));
+                OnPropertyChanged(nameof(IsUpscalerSharpenMenuEnabled));
 
                 if (value == DlssScalingIndex)
                 {
                     if (DlssMode == 0)
                     {
                         DlssMode = 1;
+                    }
+                }
+                else if (value == Fsr3ScalingIndex)
+                {
+                    // Quality: the mode FSR 3.1 is meant to be judged at.
+                    if (DlssMode == 0)
+                    {
+                        DlssMode = 2;
                     }
                 }
                 else
@@ -507,6 +524,16 @@ namespace Ryujinx.Ava.UI.ViewModels
         }
 
         public bool IsDlssSelected => _scalingFilter == DlssScalingIndex;
+
+        public bool IsFsr3Selected => _scalingFilter == Fsr3ScalingIndex;
+
+        public bool IsFsr3MenuEnabled => IsFsr3Selected && !IsGameRunning;
+
+        /// <summary>
+        /// The sharpening pass runs on the pipeline's output whichever upscaler produced it, so it
+        /// applies to FSR 3.1 as well as DLSS. Live, so it stays enabled while a game runs.
+        /// </summary>
+        public bool IsUpscalerSharpenMenuEnabled => IsDlssSelected || IsFsr3Selected;
 
         public bool IsDlssMenuEnabled => IsDlssSelected && !IsGameRunning;
 
@@ -999,7 +1026,9 @@ namespace Ryujinx.Ava.UI.ViewModels
             ShaderDumpPath = config.Graphics.ShadersDumpPath;
             AntiAliasingEffect = (int)config.Graphics.AntiAliasing.Value;
             int dlssSaved = Ryujinx.Ava.Systems.DlssUiSettings.Load();
-            ScalingFilter = dlssSaved > 0 ? DlssScalingIndex : (int)config.Graphics.ScalingFilter.Value;
+            ScalingFilter = dlssSaved > 0
+                ? (Ryujinx.Ava.Systems.DlssUiSettings.LoadFsr3Upscaler() ? Fsr3ScalingIndex : DlssScalingIndex)
+                : (int)config.Graphics.ScalingFilter.Value;
             ScalingFilterLevel = config.Graphics.ScalingFilterLevel.Value;
             DlssMode = dlssSaved;
             int presetSaved = Ryujinx.Ava.Systems.DlssUiSettings.LoadPresetValue();
@@ -1143,10 +1172,12 @@ namespace Ryujinx.Ava.UI.ViewModels
             config.Graphics.AspectRatio.Value = (AspectRatio)AspectRatio;
             config.Graphics.AntiAliasing.Value = (AntiAliasing)AntiAliasingEffect;
             int dlssMode;
-            if (ScalingFilter == DlssScalingIndex)
+            bool fsr3Upscaler = ScalingFilter == Fsr3ScalingIndex;
+
+            if (ScalingFilter == DlssScalingIndex || fsr3Upscaler)
             {
                 config.Graphics.ScalingFilter.Value = Ryujinx.Common.Configuration.ScalingFilter.Bilinear;
-                dlssMode = DlssMode == 0 ? 1 : DlssMode;
+                dlssMode = DlssMode == 0 ? (fsr3Upscaler ? 2 : 1) : DlssMode;
             }
             else
             {
@@ -1159,16 +1190,44 @@ namespace Ryujinx.Ava.UI.ViewModels
                 ? 0
                 : Ryujinx.Ava.Systems.DlssUiSettings.PresetValues[
                     Math.Clamp(DlssPresetIndex, 0, Ryujinx.Ava.Systems.DlssUiSettings.PresetValues.Length - 1)];
-            DlssModeRestartPending = dlssMode != Ryujinx.Ava.Systems.DlssUiSettings.Load() ||
+            int savedMode = Ryujinx.Ava.Systems.DlssUiSettings.Load();
+
+            // Turning the upscaler on or off, or switching between DLSS and FSR 3.1, changes what the
+            // pipeline is built from at startup (and DLSS's Streamline can only start once per
+            // process). Changing the mode while it stays on only changes the render scale, which is
+            // applied when the next game starts, so that one needs no restart.
+            bool upscalerSwitched = (dlssMode > 0) != (savedMode > 0) ||
+                (dlssMode > 0 && fsr3Upscaler != Ryujinx.Ava.Systems.DlssUiSettings.LoadFsr3Upscaler());
+            bool modeChangedLive = !upscalerSwitched && dlssMode > 0 && dlssMode != savedMode;
+            bool sharpenChanged = DlssSharpenLevel != Ryujinx.Ava.Systems.DlssUiSettings.LoadSharpenLevel();
+
+            // Everything here is re-read when the next game starts (AppHost.LoadGuestApplication), so
+            // no restart is needed -- except once Streamline has started in this process, since it
+            // cannot start twice. Closing a DLSS game already relaunches the app, so from the game
+            // list that case does not arise; it is kept as a safety net.
+            DlssModeRestartPending = Ryujinx.Graphics.Vulkan.Dlss.Streamline.WasEverInitialized &&
+                (upscalerSwitched ||
                 dlssPresetValue != Ryujinx.Ava.Systems.DlssUiSettings.LoadPresetValue() ||
                 DlssFgIndex + 1 != Ryujinx.Ava.Systems.DlssUiSettings.LoadFgMultiplier() ||
                 EnableForceMips != Ryujinx.Ava.Systems.DlssUiSettings.LoadForceMips() ||
-                DlssSharpenLevel != Ryujinx.Ava.Systems.DlssUiSettings.LoadSharpenLevel() ||
                 EnableDofSkip != Ryujinx.Ava.Systems.DlssUiSettings.LoadDofSkip() ||
-                EnableFsrFrameGen != Ryujinx.Ava.Systems.DlssUiSettings.LoadFsrFg();
+                EnableFsrFrameGen != Ryujinx.Ava.Systems.DlssUiSettings.LoadFsrFg());
             Ryujinx.Ava.Systems.DlssUiSettings.Save(dlssMode, dlssPresetValue, DlssFgIndex + 1, EnableForceMips, DlssSharpenLevel, EnableDofSkip, EnableFsrFrameGen,
                 // The overlay is toggled from the View menu; carry its current state through.
-                Ryujinx.Graphics.Vulkan.PerformanceOverlay.Enabled);
+                Ryujinx.Graphics.Vulkan.PerformanceOverlay.Enabled,
+                fsr3Upscaler);
+
+            // Applied in place. The mode reaches the render scale through UpdateGraphicsConfig below
+            // and at the next game start; sharpening is read every frame, so it applies in-game.
+            if (modeChangedLive)
+            {
+                Ryujinx.Graphics.Vulkan.Dlss.DlssIntegration.SetMode(Ryujinx.Ava.Systems.DlssUiSettings.ModeName(dlssMode));
+            }
+
+            if (sharpenChanged)
+            {
+                Ryujinx.Graphics.Vulkan.Dlss.DlssIntegration.SetSharpenLevel(DlssSharpenLevel);
+            }
 
             if (ConfigurationState.Instance.Graphics.BackendThreading != (BackendThreading)GraphicsBackendMultithreadingIndex)
             {

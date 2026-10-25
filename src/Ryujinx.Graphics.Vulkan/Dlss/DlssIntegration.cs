@@ -6,11 +6,11 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
 {
     public static class DlssIntegration
     {
-        private static readonly bool _enabled = IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS"));
+        private static bool _enabled = IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS"));
 
-        private static readonly bool _srFractional = IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS_SR"));
+        private static bool _srFractional = IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS_SR"));
 
-        public static readonly bool AutoResScale =
+        public static bool AutoResScale =
             _srFractional && IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS_AUTO_RES"));
 
         public static bool IsEnabled => _enabled;
@@ -23,8 +23,31 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
         public static readonly bool BirthClearAll =
             IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_BIRTHCLEAR_ALL"));
 
-        public static readonly bool FrameGenRequested =
+        public static bool FrameGenRequested =
             _enabled && IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS_FG"));
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                _enabled = IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS"));
+            }
+            {
+                _srFractional = IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS_SR"));
+            }
+            {
+                AutoResScale = _srFractional && IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS_AUTO_RES"));
+            }
+            {
+                FrameGenRequested = _enabled && IsTruthy(Environment.GetEnvironmentVariable("RYUJINX_DLSS_FG"));
+            }
+
+            Mode = ParseQualityMode(Environment.GetEnvironmentVariable("RYUJINX_DLSS_MODE")) ?? DlssQualityMode.Native;
+            _modeLogged = false;
+        }
 
         public static readonly bool MvFilterEnabled =
             Environment.GetEnvironmentVariable("RYUJINX_DLSS_MV_FILTER") is not ("0" or "false" or "off");
@@ -58,7 +81,29 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
 
         private static bool _modeLogged;
 
-        public static readonly DlssQualityMode Mode = ParseQualityMode(Environment.GetEnvironmentVariable("RYUJINX_DLSS_MODE")) ?? DlssQualityMode.Native;
+        public static DlssQualityMode Mode { get; private set; } =
+            ParseQualityMode(Environment.GetEnvironmentVariable("RYUJINX_DLSS_MODE")) ?? DlssQualityMode.Native;
+
+        /// <summary>
+        /// Changes the quality mode without restarting. The mode only sets the render scale, which
+        /// <see cref="ApplyModeResolutionScale"/> re-derives from the player's own scale whenever the
+        /// graphics config is refreshed, so the new mode takes effect when the next game starts.
+        /// Turning the upscaler on or off is not covered: that still needs a fresh process.
+        /// </summary>
+        public static void SetMode(string modeName)
+        {
+            DlssQualityMode? mode = ParseQualityMode(modeName);
+
+            if (mode.HasValue && mode.Value != Mode)
+            {
+                Mode = mode.Value;
+                _modeLogged = false;
+                Environment.SetEnvironmentVariable("RYUJINX_DLSS_MODE", modeName);
+            }
+        }
+
+        /// <summary>Sharpening strength after the upscaler, 0 to 100; applies on the next frame.</summary>
+        public static void SetSharpenLevel(int level) => DlssSharpenPass.Configure(level);
 
         public static float RenderScaleFactor(DlssQualityMode mode)
         {

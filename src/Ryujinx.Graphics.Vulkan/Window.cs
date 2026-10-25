@@ -560,8 +560,19 @@ namespace Ryujinx.Graphics.Vulkan
             return new TextureView(_gd, _device, new DisposableImageView(_gd.Api, _device, imageView), info, format);
         }
 
-        private static readonly bool _hdrPqRequested =
+        private static bool _hdrPqRequested =
             Environment.GetEnvironmentVariable("RYUJINX_HDR_PQ") is "1" or "true" or "on";
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                _hdrPqRequested = Environment.GetEnvironmentVariable("RYUJINX_HDR_PQ") is "1" or "true" or "on";
+            }
+        }
 
         private static SurfaceFormatKHR ChooseSwapSurfaceFormat(SurfaceFormatKHR[] availableFormats, bool colorSpacePassthroughEnabled, bool hdrEnabled)
         {
@@ -1013,6 +1024,26 @@ namespace Ryujinx.Graphics.Vulkan
             if (!dlssHandled)
             {
                 RenderSpatial(_swapchainImageViews[nextImage]);
+            }
+
+            if (PerformanceOverlay.Enabled)
+            {
+                string scaler = dlssHandled
+                    ? (FsrFg.Fsr3Upscaler.Requested ? "FSR 3.1" : "DLSS")
+                    : _scalingFilter switch
+                    {
+                        Effects.FsrScalingFilter => "FSR 1.0",
+                        Effects.NisScalingFilter => "NIS",
+                        Effects.AreaScalingFilter => "AREA",
+                        _ => string.Empty,
+                    };
+
+                PerformanceOverlay.ReportResolution(
+                    Math.Abs(srcX1 - srcX0),
+                    Math.Abs(srcY1 - srcY0),
+                    dstWidth,
+                    dstHeight,
+                    scaler);
             }
 
             void RenderSpatial(TextureView spatialDst)

@@ -12,13 +12,34 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
 {
     class DlssSharpenPass : IDisposable
     {
-        public static readonly bool Enabled =
+        private static volatile bool _enabled =
             Environment.GetEnvironmentVariable("RYUJINX_DLSS_SHARPEN") == "1";
 
-        public static readonly int Level =
+        private static volatile int _level =
             int.TryParse(Environment.GetEnvironmentVariable("RYUJINX_DLSS_SHARPEN_LEVEL"), out int l)
                 ? Math.Clamp(l, 0, 100)
                 : 25;
+
+        // Both are read every frame (Level feeds the shader constant in Run), so a change from the
+        // settings applies on the next frame, in-game included.
+        public static bool Enabled => _enabled;
+
+        public static int Level => _level;
+
+        internal static void ReloadProfileSettings()
+        {
+            _enabled = Environment.GetEnvironmentVariable("RYUJINX_DLSS_SHARPEN") == "1";
+            _level = int.TryParse(Environment.GetEnvironmentVariable("RYUJINX_DLSS_SHARPEN_LEVEL"), out int l)
+                ? Math.Clamp(l, 0, 100)
+                : 25;
+        }
+
+        /// <summary>Sets the sharpening strength, 0 to 100; 0 turns the pass off.</summary>
+        public static void Configure(int level)
+        {
+            _level = Math.Clamp(level, 0, 100);
+            _enabled = _level > 0;
+        }
 
         private readonly VulkanRenderer _renderer;
         private readonly PipelineHelperShader _pipeline;

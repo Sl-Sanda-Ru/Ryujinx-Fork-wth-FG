@@ -3,6 +3,7 @@
 using Ryujinx.Common.Configuration;
 using Ryujinx.Common.Logging;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
@@ -13,6 +14,9 @@ namespace Ryujinx.Ava.Systems
         private static readonly string[] _modeEnv = { "", "dlaa", "quality", "balanced", "performance" };
 
         public static readonly int[] PresetValues = { 11, 13, 12, 10, 6 };
+
+        /// <summary>The environment name of a saved mode index, e.g. 2 -> "quality".</summary>
+        public static string ModeName(int mode) => mode > 0 && mode < _modeEnv.Length ? _modeEnv[mode] : string.Empty;
 
         private static string FilePath => Path.Combine(AppDataManager.BaseDirPath, "dlss_mode.cfg");
 
@@ -171,6 +175,12 @@ namespace Ryujinx.Ava.Systems
         public static bool LoadFpsOverlay() => LoadFlag(7);
 
         /// <summary>
+        /// Which upscaler the saved mode drives: false for DLSS, true for AMD FSR 3.1. FSR 3.1 runs
+        /// through the same pipeline as DLSS, so it shares the mode field and only this flag differs.
+        /// </summary>
+        public static bool LoadFsr3Upscaler() => LoadFlag(8);
+
+        /// <summary>
         /// Rewrites only the FPS overlay field, for the View menu toggle, which has none of the other
         /// settings at hand. Missing earlier fields are filled with what their loaders fall back to.
         /// </summary>
@@ -178,7 +188,7 @@ namespace Ryujinx.Ava.Systems
         {
             try
             {
-                string[] defaults = ["0", "0", "1", "0", "0", "0", "0", "0"];
+                string[] defaults = ["0", "0", "1", "0", "0", "0", "0", "0", "0"];
                 string[] parts = File.Exists(FilePath)
                     ? File.ReadAllText(FilePath).Trim().Split(new[] { ' ', ',', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                     : [];
@@ -202,14 +212,14 @@ namespace Ryujinx.Ava.Systems
             }
         }
 
-        public static void Save(int mode, int presetValue, int fgMultiplier, bool forceMips, int sharpenLevel, bool dofSkipFlag, bool fsrFgFlag, bool fpsOverlayFlag)
+        public static void Save(int mode, int presetValue, int fgMultiplier, bool forceMips, int sharpenLevel, bool dofSkipFlag, bool fsrFgFlag, bool fpsOverlayFlag, bool fsr3UpscalerFlag)
         {
             try
             {
-                File.WriteAllText(FilePath, string.Create(CultureInfo.InvariantCulture, $"{mode} {presetValue} {fgMultiplier} {(forceMips ? 1 : 0)} {Math.Clamp(sharpenLevel, 0, 100)} {(dofSkipFlag ? 1 : 0)} {(fsrFgFlag ? 1 : 0)} {(fpsOverlayFlag ? 1 : 0)}"));
+                File.WriteAllText(FilePath, string.Create(CultureInfo.InvariantCulture, $"{mode} {presetValue} {fgMultiplier} {(forceMips ? 1 : 0)} {Math.Clamp(sharpenLevel, 0, 100)} {(dofSkipFlag ? 1 : 0)} {(fsrFgFlag ? 1 : 0)} {(fpsOverlayFlag ? 1 : 0)} {(fsr3UpscalerFlag ? 1 : 0)}"));
 
                 Logger.Info?.Print(LogClass.Application,
-                    $"DLSS UI saved: mode={mode} preset={presetValue} fg={fgMultiplier}x mips={(forceMips ? 1 : 0)} sharpen={sharpenLevel} xc2Stack={(dofSkipFlag ? 1 : 0)} fsrFg={(fsrFgFlag ? 1 : 0)} fpsOverlay={(fpsOverlayFlag ? 1 : 0)} -> {FilePath}");
+                    $"DLSS UI saved: mode={mode} preset={presetValue} fg={fgMultiplier}x mips={(forceMips ? 1 : 0)} sharpen={sharpenLevel} xc2Stack={(dofSkipFlag ? 1 : 0)} fsrFg={(fsrFgFlag ? 1 : 0)} fpsOverlay={(fpsOverlayFlag ? 1 : 0)} upscaler={(fsr3UpscalerFlag ? "fsr3" : "dlss")} -> {FilePath}");
             }
             catch (Exception ex)
             {
@@ -253,8 +263,105 @@ namespace Ryujinx.Ava.Systems
             }
         }
 
+        /// <summary>Every variable this profile sets, so a re-apply can clear the previous run's.</summary>
+        private static readonly string[] _profileVariables =
+        {
+            "RYUJINX_DLSS",
+            "RYUJINX_DLSS_AUTO_RES",
+            "RYUJINX_DLSS_FG",
+            "RYUJINX_DLSS_FG_FRAMES",
+            "RYUJINX_DLSS_MODE",
+            "RYUJINX_DLSS_PRESET",
+            "RYUJINX_DLSS_SCENECUT_MAX_MOTION",
+            "RYUJINX_DLSS_SHARPEN",
+            "RYUJINX_DLSS_SHARPEN_LEVEL",
+            "RYUJINX_DLSS_SR",
+            "RYUJINX_FSR_FG",
+            "RYUJINX_FSR_FG_CONTEXT",
+            "RYUJINX_FSR_UPSCALE",
+            "RYUJINX_HDR_PQ",
+            "RYUJINX_MVPP_ASPECTLOCK",
+            "RYUJINX_MVPP_BORDERFIX",
+            "RYUJINX_MVPP_CAP",
+            "RYUJINX_MVPP_DEJITTER",
+            "RYUJINX_MVPP_EDGE",
+            "RYUJINX_MVPP_ELECT_HYST",
+            "RYUJINX_MVPP_ELECT_MAXSTEP",
+            "RYUJINX_MVPP_ELECT_WARP",
+            "RYUJINX_MVPP_FLIPY",
+            "RYUJINX_MVPP_FORCEMIPS",
+            "RYUJINX_MVPP_FORCEMIPS_LEVELS",
+            "RYUJINX_MVPP_FORCEMIPS_REFRESH_MS",
+            "RYUJINX_MVPP_FORCEMIPS_TRILINEAR",
+            "RYUJINX_MVPP_MULTIADDR",
+            "RYUJINX_MVPP_MULTIADDR_MAXROT",
+            "RYUJINX_MVPP_NOLDR",
+            "RYUJINX_MVPP_REPROJ",
+            "RYUJINX_MVPP_SKYCALM",
+            "RYUJINX_MVPP_SKYDRIFT",
+            "RYUJINX_MVPP_SKYGRID",
+            "RYUJINX_MVPP_SKYREJECT",
+            "RYUJINX_MVPP_SKYROT",
+            "RYUJINX_MVPP_SNAPFLOOR",
+            "RYUJINX_MVPP_SNAPGUARD",
+            "RYUJINX_MVPP_SNAPHOLD",
+            "RYUJINX_MVPP_STATS_STRIDE",
+            "RYUJINX_MVPP_VPFIFO",
+            "RYUJINX_MVPP_VPSOLO",
+        };
+
+        // The profile variables that were already set before the profile first ran: a launcher's.
+        // A re-apply leaves those alone, and a launcher that set RYUJINX_DLSS owns the whole profile.
+        private static HashSet<string> _launcherVariables;
+        private static bool _launcherOwnsProfile;
+
+        /// <summary>
+        /// Rebuilds the profile from the saved settings, replacing what the previous run set. Called at
+        /// each game start, before the renderer reads it, so upscaler changes made in the settings
+        /// apply to the next game without restarting the app.
+        /// </summary>
+        public static void Reapply()
+        {
+            if (_launcherVariables == null)
+            {
+                ApplyAtStartup();
+
+                return;
+            }
+
+            if (_launcherOwnsProfile)
+            {
+                return;
+            }
+
+            foreach (string name in _profileVariables)
+            {
+                if (!_launcherVariables.Contains(name))
+                {
+                    Environment.SetEnvironmentVariable(name, null);
+                }
+            }
+
+            ApplyAtStartup();
+        }
+
         public static void ApplyAtStartup()
         {
+            if (_launcherVariables == null)
+            {
+                _launcherVariables = new HashSet<string>();
+
+                foreach (string name in _profileVariables)
+                {
+                    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(name)))
+                    {
+                        _launcherVariables.Add(name);
+                    }
+                }
+
+                _launcherOwnsProfile = _launcherVariables.Contains("RYUJINX_DLSS");
+            }
+
             Ryujinx.Graphics.Vulkan.PerformanceOverlay.Enabled = LoadFpsOverlay();
 
             if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS")) && LoadForceMips())
@@ -302,7 +409,23 @@ namespace Ryujinx.Ava.Systems
             Environment.SetEnvironmentVariable("RYUJINX_DLSS_MODE", _modeEnv[mode]);
             Environment.SetEnvironmentVariable("RYUJINX_DLSS_SR", "1");
 
-            Environment.SetEnvironmentVariable("RYUJINX_DLSS_AUTO_RES", "1");
+            // FSR 3.1 rides the DLSS pipeline with its own upscaler in place of Streamline's, and
+            // keeps the render size fixed from startup: the mode scales the player's resolution
+            // scale once rather than auto-res retuning it mid-game, which faults the GPU on Intel in
+            // some games (Pokemon Shield) when render targets are rebuilt at a fractional scale.
+            bool fsr3 = LoadFsr3Upscaler();
+
+            if (fsr3)
+            {
+                Environment.SetEnvironmentVariable("RYUJINX_FSR_UPSCALE", "1");
+                Environment.SetEnvironmentVariable("RYUJINX_DLSS_AUTO_RES", "0");
+
+                Logger.Info?.Print(LogClass.Application, $"AMD FSR 3.1 upscaling enabled (UI setting), mode={_modeEnv[mode]}, render size fixed at startup.");
+            }
+            else
+            {
+                Environment.SetEnvironmentVariable("RYUJINX_DLSS_AUTO_RES", "1");
+            }
 
             Environment.SetEnvironmentVariable("RYUJINX_MVPP_CAP", "1");
             Environment.SetEnvironmentVariable("RYUJINX_MVPP_REPROJ", "2");
@@ -346,7 +469,8 @@ namespace Ryujinx.Ava.Systems
             // The two frame generators cannot share a swapchain. FidelityFX creates its own, so
             // asking for both leaves DLSS-FG to decline at probe time; not arming it here keeps the
             // choice in one place instead of a race between two subsystems.
-            if (fgMultiplier > 1 && !fsrFg)
+            // DLSS-FG takes its frame token from DLSS's own evaluate, which FSR 3.1 replaces.
+            if (fgMultiplier > 1 && !fsrFg && !fsr3)
             {
                 Environment.SetEnvironmentVariable("RYUJINX_DLSS_FG", "1");
                 Environment.SetEnvironmentVariable("RYUJINX_DLSS_FG_FRAMES", (fgMultiplier - 1).ToString(CultureInfo.InvariantCulture));

@@ -42,8 +42,19 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// </summary>
         private readonly ISampler _anisoSampler;
 
-        private static readonly bool _forceMipsTrilinear =
+        private static bool _forceMipsTrilinear =
             System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS_TRILINEAR") == "1";
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                _forceMipsTrilinear = System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_FORCEMIPS_TRILINEAR") == "1";
+            }
+        }
 
         private static readonly float _forceMipsBias =
             float.TryParse(

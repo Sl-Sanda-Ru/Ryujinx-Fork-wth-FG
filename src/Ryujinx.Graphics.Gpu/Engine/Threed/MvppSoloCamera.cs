@@ -8,7 +8,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
     static class MvppSoloCamera
     {
-        public static readonly bool Enabled =
+        public static bool Enabled =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_VPSOLO") == "1";
 
         private const int ElectionIntervalMs = 1000;
@@ -20,7 +20,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private const float PosAgreeEps = 0.5f;
         private const float TeleportEps = 1e5f;
 
-        private static readonly float ElectMaxStep =
+        private static float ElectMaxStep =
             float.TryParse(System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_ELECT_MAXSTEP"),
                 System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out float electMaxStep) && electMaxStep > 0f
@@ -150,13 +150,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
         private static long _lastElectionMs;
 
-        private static readonly int _electHystMs =
+        private static int _electHystMs =
             int.TryParse(System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_ELECT_HYST"), out int hy) && hy > 0 ? hy : 0;
 
         private static readonly bool _electHystAb =
             System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_ELECT_HYST_AB") == "1";
 
-        private static readonly bool _electWarp =
+        private static bool _electWarp =
             System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_ELECT_WARP") == "1";
 
         private static readonly bool _rotMotion =
@@ -263,7 +263,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private const float CatchUpCapSec = 2f;
         private const float MaxFocalDrift = 0.15f;
 
-        private static readonly bool _deJitter =
+        private static bool _deJitter =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_DEJITTER") == "1";
 
         private const int FailReasons = 7;
@@ -330,7 +330,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private static readonly bool _altProbe =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_DUPPAIR") == "1";
 
-        private static readonly bool _multiAddr =
+        private static bool _multiAddr =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_MULTIADDR") == "1";
 
         private static readonly float[] _goodFlat = new float[16];
@@ -368,7 +368,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
         private static readonly float[] _candFlat = new float[16];
 
-        private static readonly float _multiMaxRot =
+        private static float _multiMaxRot =
             float.TryParse(Environment.GetEnvironmentVariable("RYUJINX_MVPP_MULTIADDR_MAXROT"),
                 System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out float mr) && mr > 0f ? mr : 0f;
@@ -871,13 +871,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _jitSeenN = 0;
         }
 
-        private static readonly bool _aspectLock =
+        private static bool _aspectLock =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_ASPECTLOCK") == "1";
 
-        private static readonly bool _skyReject =
+        private static bool _skyReject =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYREJECT") == "1";
 
-        private static readonly bool _snapGuard =
+        private static bool _snapGuard =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_SNAPGUARD") == "1";
 
         private const float SnapFactor = 20f;
@@ -890,17 +890,71 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private static readonly bool _snapLearn =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_SNAPLEARN") == "1";
 
-        private static readonly float _snapFloor =
+        private static float _snapFloor =
             float.TryParse(Environment.GetEnvironmentVariable("RYUJINX_MVPP_SNAPFLOOR"),
                 System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out float sf) && sf > 0f ? sf : 0f;
 
         private static int _snapFloorUsed;
 
-        private static readonly int _snapHold =
+        private static int _snapHold =
             (int)(float.TryParse(Environment.GetEnvironmentVariable("RYUJINX_MVPP_SNAPHOLD"),
                 System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out float sh) && sh > 0f ? sh : 0f);
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                Enabled = Environment.GetEnvironmentVariable("RYUJINX_MVPP_VPSOLO") == "1";
+            }
+            {
+                ElectMaxStep = float.TryParse(System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_ELECT_MAXSTEP"),
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float electMaxStep) && electMaxStep > 0f
+                    ? electMaxStep
+                    : 0f;
+            }
+            {
+                _electHystMs = int.TryParse(System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_ELECT_HYST"), out int hy) && hy > 0 ? hy : 0;
+            }
+            {
+                _electWarp = System.Environment.GetEnvironmentVariable("RYUJINX_MVPP_ELECT_WARP") == "1";
+            }
+            {
+                _deJitter = Environment.GetEnvironmentVariable("RYUJINX_MVPP_DEJITTER") == "1";
+            }
+            {
+                _multiAddr = Environment.GetEnvironmentVariable("RYUJINX_MVPP_MULTIADDR") == "1";
+            }
+            {
+                _multiMaxRot = float.TryParse(Environment.GetEnvironmentVariable("RYUJINX_MVPP_MULTIADDR_MAXROT"),
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float mr) && mr > 0f ? mr : 0f;
+            }
+            {
+                _aspectLock = Environment.GetEnvironmentVariable("RYUJINX_MVPP_ASPECTLOCK") == "1";
+            }
+            {
+                _skyReject = Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYREJECT") == "1";
+            }
+            {
+                _snapGuard = Environment.GetEnvironmentVariable("RYUJINX_MVPP_SNAPGUARD") == "1";
+            }
+            {
+                _snapFloor = float.TryParse(Environment.GetEnvironmentVariable("RYUJINX_MVPP_SNAPFLOOR"),
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float sf) && sf > 0f ? sf : 0f;
+            }
+            {
+                _snapHold = (int)(float.TryParse(Environment.GetEnvironmentVariable("RYUJINX_MVPP_SNAPHOLD"),
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out float sh) && sh > 0f ? sh : 0f);
+            }
+        }
 
         private static int _snapStreakMax;
         private static int _snapForced;

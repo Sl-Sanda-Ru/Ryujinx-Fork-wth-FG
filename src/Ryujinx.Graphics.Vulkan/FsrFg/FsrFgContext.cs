@@ -591,12 +591,11 @@ namespace Ryujinx.Graphics.Vulkan.FsrFg
                 return;
             }
 
-            if (_zeroMotion != null)
-            {
-                // The outgoing pair may still be read by frames in flight.
-                _gd.Api.DeviceWaitIdle(device);
-            }
-
+            // No wait: disposal is deferred until the command buffers using the old pair finish. A
+            // vkDeviceWaitIdle here would also be illegal, since it requires every queue to be
+            // externally synchronised and FidelityFX's presenter thread submits to its own queues
+            // at any moment. This runs when MV++ starts and the motion vector size changes, and
+            // that collision hung the GPU on Intel with FSR 3.1 upscaling and frame generation on.
             _zeroDepth?.Dispose();
             _zeroMotion?.Dispose();
 
@@ -707,8 +706,11 @@ namespace Ryujinx.Graphics.Vulkan.FsrFg
             {
                 if (HasFrameGen)
                 {
-                    // The outgoing context owns GPU resources that may still be in use.
-                    _gd.Api.DeviceWaitIdle(device);
+                    // The outgoing context's resources are only used on the game queue
+                    // (interpolation runs there, async workloads are off), so that queue is all
+                    // that has to drain -- and unlike the device it can be waited on safely while
+                    // FidelityFX's own thread uses its queues.
+                    WaitGameQueueIdle(_gd);
                 }
 
                 _fgWidth = width;
@@ -875,6 +877,19 @@ namespace Ryujinx.Graphics.Vulkan.FsrFg
                 _prepareFailLogged = true;
 
                 Logger.Warning?.Print(LogClass.Gpu, $"FSR-FG: prepare dispatch failed ({code}); generated frames will not appear.");
+            }
+        }
+
+        /// <summary>
+        /// Waits for the game queue alone, under the lock every submit to it takes. The safe form
+        /// of "wait for the GPU" while frame generation is armed: vkDeviceWaitIdle would need every
+        /// queue externally synchronised, including the ones FidelityFX's threads submit to.
+        /// </summary>
+        internal static void WaitGameQueueIdle(VulkanRenderer gd)
+        {
+            lock (gd.QueueLock)
+            {
+                gd.Api.QueueWaitIdle(gd.Queue);
             }
         }
 

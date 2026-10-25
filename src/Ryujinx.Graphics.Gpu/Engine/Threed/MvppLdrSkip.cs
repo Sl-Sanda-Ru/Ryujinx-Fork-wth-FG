@@ -6,8 +6,19 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 {
     static class MvppLdrSkip
     {
-        public static readonly bool Enabled =
+        public static bool Enabled =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_NOLDR") == "1";
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                Enabled = Environment.GetEnvironmentVariable("RYUJINX_MVPP_NOLDR") == "1";
+            }
+        }
 
         public static readonly bool SkipRank1 =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_NORANK1") == "1";

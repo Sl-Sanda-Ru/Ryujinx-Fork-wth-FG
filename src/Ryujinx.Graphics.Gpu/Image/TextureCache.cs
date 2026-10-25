@@ -1285,8 +1285,19 @@ namespace Ryujinx.Graphics.Gpu.Image
         /// <param name="caps">GPU capabilities</param>
         /// <param name="scale">Texture scale factor, to be applied to the texture size</param>
         /// <returns>The texture creation information</returns>
-        internal static readonly bool DlssSrSpike =
+        internal static bool DlssSrSpike =
             Environment.GetEnvironmentVariable("RYUJINX_DLSS_SR") == "1";
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                DlssSrSpike = Environment.GetEnvironmentVariable("RYUJINX_DLSS_SR") == "1";
+            }
+        }
 
         public static TextureCreateInfo GetCreateInfo(TextureInfo info, Capabilities caps, float scale)
         {

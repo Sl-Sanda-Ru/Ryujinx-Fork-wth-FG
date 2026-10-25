@@ -35,10 +35,23 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
         private static readonly bool _activationEnabled =
             Environment.GetEnvironmentVariable("RYUJINX_DLSS_FG_ACTIVATE") is not ("0" or "false" or "off");
 
-        private static readonly uint _framesToGenerate =
+        private static uint _framesToGenerate =
             uint.TryParse(Environment.GetEnvironmentVariable("RYUJINX_DLSS_FG_FRAMES"), out uint n)
                 ? Math.Clamp(n, 1u, 5u)
                 : 1u;
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                _framesToGenerate = uint.TryParse(Environment.GetEnvironmentVariable("RYUJINX_DLSS_FG_FRAMES"), out uint n)
+                    ? Math.Clamp(n, 1u, 5u)
+                    : 1u;
+            }
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         private struct StructType

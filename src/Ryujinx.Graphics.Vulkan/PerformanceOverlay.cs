@@ -38,6 +38,27 @@ namespace Ryujinx.Graphics.Vulkan
 
         internal static string Text => Volatile.Read(ref _text);
 
+        private static string _resolution = string.Empty;
+
+        /// <summary>
+        /// "source -> output  upscaler" for the last presented frame: the size the game rendered at,
+        /// the size it filled on screen, and what scaled it.
+        /// </summary>
+        public static string ResolutionLine => Volatile.Read(ref _resolution);
+
+        internal static void ReportResolution(int sourceWidth, int sourceHeight, int outputWidth, int outputHeight, string scaler)
+        {
+            string line = scaler.Length == 0
+                ? $"{sourceWidth}x{sourceHeight} -> {outputWidth}x{outputHeight}"
+                : $"{sourceWidth}x{sourceHeight} -> {outputWidth}x{outputHeight}  {scaler}";
+
+            // Same frame size every frame in practice, so only a change allocates a new string.
+            if (line != _resolution)
+            {
+                Volatile.Write(ref _resolution, line);
+            }
+        }
+
         private static long _presentsInWindow;
         private static long _windowStartMs;
         private static long _hostPresentFpsMilli;

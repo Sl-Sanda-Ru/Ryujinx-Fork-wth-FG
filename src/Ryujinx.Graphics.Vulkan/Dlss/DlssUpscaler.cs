@@ -23,10 +23,10 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
         private const float SceneCutMaxMotion = 0.02f;
         private const int CounterCount = 9;
 
-        private static readonly int _mvppReprojMode =
+        private static int _mvppReprojMode =
             int.TryParse(Environment.GetEnvironmentVariable("RYUJINX_MVPP_REPROJ"), out int mvppEnvMode) ? mvppEnvMode : 0;
 
-        private static readonly bool _mvppFlipY =
+        private static bool _mvppFlipY =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_FLIPY") == "1";
 
         private static readonly bool _mvppVpDelay =
@@ -47,7 +47,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
         private static readonly bool _mvppDynMask =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_DYNMASK") == "1";
 
-        private static readonly bool _mvppBorderFix =
+        private static bool _mvppBorderFix =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_BORDERFIX") == "1";
         private static readonly float _mvppBorderFixScan = ParseEnvFloat("RYUJINX_MVPP_BORDERFIX_SCAN", 8f);
         private static readonly float _mvppBorderFixThresh = ParseEnvFloat("RYUJINX_MVPP_BORDERFIX_THRESH", 2f);
@@ -113,7 +113,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
 
         private static readonly float _resetCooldownMs = ParseEnvFloat("RYUJINX_DLSS_RESET_COOLDOWN_MS", 0f);
 
-        private static readonly float _sceneCutMaxMotion = ParseEnvFloat("RYUJINX_DLSS_SCENECUT_MAX_MOTION", SceneCutMaxMotion);
+        private static float _sceneCutMaxMotion = ParseEnvFloat("RYUJINX_DLSS_SCENECUT_MAX_MOTION", SceneCutMaxMotion);
 
         private int _lastTeleportSeq;
 
@@ -181,7 +181,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
         private readonly long _mvppDumpNotBeforeMs =
             Environment.TickCount64 + (long)(_mvppDumpDelay * 1000);
 
-        private static readonly float _mvppEdgeMode = ParseEnvFloat("RYUJINX_MVPP_EDGE", 0f);
+        private static float _mvppEdgeMode = ParseEnvFloat("RYUJINX_MVPP_EDGE", 0f);
 
         private static readonly bool _mvppEdgeAlways = ParseEnvFloat("RYUJINX_MVPP_EDGE_ALWAYS", 0f) > 0f;
 
@@ -274,25 +274,25 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
             (Environment.GetEnvironmentVariable("RYUJINX_DLSS_BNORESET") ?? "1") == "1";
         private int _bSuppressedCuts;
 
-        private static readonly bool _mvppSkyRot =
+        private static bool _mvppSkyRot =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYROT") == "1";
 
         private static readonly bool _mvppSkyFlow =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYFLOW") == "1";
 
-        private static readonly bool _mvppSkyDrift =
+        private static bool _mvppSkyDrift =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYDRIFT") == "1";
 
         private static readonly int _mvppSkyCutCooldown =
             (int)ParseEnvFloat("RYUJINX_MVPP_SKYCUT_COOLDOWN", 30f);
 
-        private static readonly int _mvppStatsStride =
+        private static int _mvppStatsStride =
             (int)ParseEnvFloat("RYUJINX_MVPP_STATS_STRIDE", 1f);
 
         private float _skyDriftEmaX;
         private float _skyDriftEmaY;
 
-        private static readonly bool _mvppSkyCalm =
+        private static bool _mvppSkyCalm =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYCALM") == "1";
 
         private const float SkyCalmMaxPxPerFrame = 0.1f;
@@ -312,8 +312,46 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
         private static readonly uint _skyGridMinSamples =
             (uint)MathF.Max(1f, ParseEnvFloat("RYUJINX_MVPP_SKYGRID_MINSAMPLES", 200f));
 
-        private static readonly bool _mvppSkyGrid =
+        private static bool _mvppSkyGrid =
             Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYGRID") == "1";
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                _mvppReprojMode = int.TryParse(Environment.GetEnvironmentVariable("RYUJINX_MVPP_REPROJ"), out int mvppEnvMode) ? mvppEnvMode : 0;
+            }
+            {
+                _mvppFlipY = Environment.GetEnvironmentVariable("RYUJINX_MVPP_FLIPY") == "1";
+            }
+            {
+                _mvppBorderFix = Environment.GetEnvironmentVariable("RYUJINX_MVPP_BORDERFIX") == "1";
+            }
+            {
+                _sceneCutMaxMotion = ParseEnvFloat("RYUJINX_DLSS_SCENECUT_MAX_MOTION", SceneCutMaxMotion);
+            }
+            {
+                _mvppEdgeMode = ParseEnvFloat("RYUJINX_MVPP_EDGE", 0f);
+            }
+            {
+                _mvppSkyRot = Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYROT") == "1";
+            }
+            {
+                _mvppSkyDrift = Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYDRIFT") == "1";
+            }
+            {
+                _mvppStatsStride = (int)ParseEnvFloat("RYUJINX_MVPP_STATS_STRIDE", 1f);
+            }
+            {
+                _mvppSkyCalm = Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYCALM") == "1";
+            }
+            {
+                _mvppSkyGrid = Environment.GetEnvironmentVariable("RYUJINX_MVPP_SKYGRID") == "1";
+            }
+        }
 
         private readonly float[] _zoneDriftEmaX = new float[32];
         private readonly float[] _zoneDriftEmaY = new float[32];
@@ -455,6 +493,20 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
         private TextureView _mvppMotion;
 
         private TextureView _lastMvSource;
+
+        private FsrFg.Fsr3Upscaler _fsr3;
+        private TextureView _fsrLinearIn;
+        private TextureView _fsrLinearOut;
+        private TextureView _fsrDepth;
+        private bool _fsrPathLogged;
+
+        private static readonly bool _fsrLinearize =
+            Environment.GetEnvironmentVariable("RYUJINX_FSR_UPSCALE_LINEARIZE") != "0";
+
+        // Diagnostic: everything in this pipeline runs, but FSR's dispatch is replaced by a plain
+        // resize, which separates a fault in FSR's shaders from one in the pipeline's own passes.
+        private static readonly bool _fsrBypass =
+            Environment.GetEnvironmentVariable("RYUJINX_FSR_UPSCALE_BYPASS") == "1";
 
         /// <summary>
         /// The motion vector view selected for the most recent frame, in pixel units at the
@@ -702,7 +754,9 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
             float whiten,
             bool pqOutput = false)
         {
-            if (!DlssIntegration.IsEnabled || !Streamline.IsInitialized)
+            // FSR 3.1 stands in for DLSS without Streamline, which is what lets this pipeline run on
+            // GPUs Streamline never loads on (VulkanRenderer only probes it on NVIDIA).
+            if (!DlssIntegration.IsEnabled || !(Streamline.IsInitialized || FsrFg.Fsr3Upscaler.Requested))
             {
                 return false;
             }
@@ -1079,8 +1133,8 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
 
                         foreach (StreamlineDlss.DlssMode dm in ModesByQuality)
                         {
-                            bool okOpt = StreamlineDlss.GetOptimalRenderSize(dm, (uint)contentW, (uint)contentH, out uint oW, out uint oH);
-                            bool okRng = StreamlineDlss.GetRenderRange(dm, (uint)contentW, (uint)contentH, out uint miW, out uint miH, out uint maW, out uint maH);
+                            bool okOpt = UpscalerOptimalRenderSize(dm, (uint)contentW, (uint)contentH, out uint oW, out uint oH);
+                            bool okRng = UpscalerRenderRange(dm, (uint)contentW, (uint)contentH, out uint miW, out uint miH, out uint maW, out uint maH);
                             Logger.Info?.Print(LogClass.Gpu,
                                 $"DLSS range diag [{dm}] @ {contentW}x{contentH}: optimal={(okOpt ? $"{oW}x{oH}" : "n/a")} " +
                                 $"range={(okRng ? $"[{miW}..{maW}]x[{miH}..{maH}]" : "n/a")}.");
@@ -1274,7 +1328,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
 
             EnsureResources(input, dlssOutW, dlssOutH, cbs);
 
-            if (!StreamlineDlss.SetOptions(ViewportId, mode, (uint)dlssOutW, (uint)dlssOutH, hdr))
+            if (!FsrFg.Fsr3Upscaler.Requested && !StreamlineDlss.SetOptions(ViewportId, mode, (uint)dlssOutW, (uint)dlssOutH, hdr))
             {
                 return false;
             }
@@ -1693,19 +1747,32 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
             bool useBiasMask = _mvppReprojMode >= 2 && mvppRan && !_depthGuardMuted && _mvppDynMask && _mvppBias && _mvppBiasMask != null;
             StreamlineDlss.DlssTexture biasTex = useBiasMask ? Describe(_mvppBiasMask, cbs) : default;
 
-            bool ok = StreamlineDlss.Evaluate(
-                (IntPtr)cbs.CommandBuffer.Handle,
-                ViewportId,
-                _frame++,
-                reset,
-                evalJitterX,
-                evalJitterY,
-                in inTex,
-                in outTex,
-                in depthTex,
-                in mvTex,
-                in biasTex,
-                useBiasMask);
+            bool ok;
+
+            if (FsrFg.Fsr3Upscaler.Requested)
+            {
+                // Same inputs, same conventions: FSR 3.1 stands in for the Streamline evaluate. The
+                // bias mask is a DLSS hint with no FSR equivalent and is not passed.
+                _frame++;
+
+                ok = RunFsr3(cbs, reset, evalJitterX, evalJitterY, input, depthSource, in inTex, in outTex, in depthTex, in mvTex, hdr);
+            }
+            else
+            {
+                ok = StreamlineDlss.Evaluate(
+                    (IntPtr)cbs.CommandBuffer.Handle,
+                    ViewportId,
+                    _frame++,
+                    reset,
+                    evalJitterX,
+                    evalJitterY,
+                    in inTex,
+                    in outTex,
+                    in depthTex,
+                    in mvTex,
+                    in biasTex,
+                    useBiasMask);
+            }
 
             if (_align0)
             {
@@ -2636,11 +2703,65 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
             return nowMs - _autoResPendingSinceMs >= AutoResSettleMs;
         }
 
+        /// <summary>FSR 3.1's per-dimension upscale ratio for each mode (AMD's documented values).</summary>
+        private static float FsrRatio(StreamlineDlss.DlssMode mode)
+        {
+            return mode switch
+            {
+                StreamlineDlss.DlssMode.Dlaa => 1.0f,
+                StreamlineDlss.DlssMode.UltraQuality => 1.3f,
+                StreamlineDlss.DlssMode.MaxQuality => 1.5f,
+                StreamlineDlss.DlssMode.Balanced => 1.7f,
+                StreamlineDlss.DlssMode.MaxPerformance => 2.0f,
+                StreamlineDlss.DlssMode.UltraPerformance => 3.0f,
+                _ => 1.0f,
+            };
+        }
+
+        /// <summary>
+        /// The render size a mode wants for a display size, from whichever upscaler runs: Streamline
+        /// for DLSS, AMD's ratios for FSR 3.1, which has no Streamline to ask.
+        /// </summary>
+        private static bool UpscalerOptimalRenderSize(StreamlineDlss.DlssMode mode, uint displayW, uint displayH, out uint renderW, out uint renderH)
+        {
+            if (!FsrFg.Fsr3Upscaler.Requested)
+            {
+                return StreamlineDlss.GetOptimalRenderSize(mode, displayW, displayH, out renderW, out renderH);
+            }
+
+            float ratio = FsrRatio(mode);
+            renderW = (uint)(displayW / ratio);
+            renderH = (uint)(displayH / ratio);
+
+            return renderW != 0 && renderH != 0;
+        }
+
+        /// <summary>
+        /// The render sizes a mode accepts. DLSS reports a band per mode; FSR 3.1 takes any size up
+        /// to the output, so the band is the whole span its modes cover, a third of the output to all
+        /// of it, and the mode choice falls to whichever ratio fits the real input best.
+        /// </summary>
+        private static bool UpscalerRenderRange(StreamlineDlss.DlssMode mode, uint displayW, uint displayH,
+            out uint minW, out uint minH, out uint maxW, out uint maxH)
+        {
+            if (!FsrFg.Fsr3Upscaler.Requested)
+            {
+                return StreamlineDlss.GetRenderRange(mode, displayW, displayH, out minW, out minH, out maxW, out maxH);
+            }
+
+            minW = displayW / 3;
+            minH = displayH / 3;
+            maxW = displayW;
+            maxH = displayH;
+
+            return displayW != 0 && displayH != 0;
+        }
+
         private static bool TryPickMode(int inW, int inH, int outW, int outH, out StreamlineDlss.DlssMode mode)
         {
             foreach (StreamlineDlss.DlssMode candidate in ModesByQuality)
             {
-                if (StreamlineDlss.GetRenderRange(candidate, (uint)outW, (uint)outH, out uint minW, out uint minH, out uint maxW, out uint maxH) &&
+                if (UpscalerRenderRange(candidate, (uint)outW, (uint)outH, out uint minW, out uint minH, out uint maxW, out uint maxH) &&
                     inW >= minW && inW <= maxW && inH >= minH && inH <= maxH)
                 {
                     mode = candidate;
@@ -2671,7 +2792,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                     continue;
                 }
 
-                if (!StreamlineDlss.GetOptimalRenderSize(candidate, (uint)displayW, (uint)displayH,
+                if (!UpscalerOptimalRenderSize(candidate, (uint)displayW, (uint)displayH,
                         out uint optW, out uint optH) || optW == 0 || optH == 0)
                 {
                     continue;
@@ -2680,13 +2801,13 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                 double ratioW = (double)displayW / optW;
                 double ratioH = (double)displayH / optH;
 
-                bool degenerate = StreamlineDlss.GetRenderRange(candidate, (uint)displayW, (uint)displayH,
+                bool degenerate = UpscalerRenderRange(candidate, (uint)displayW, (uint)displayH,
                         out uint dMinW, out _, out uint dMaxW, out _) && dMinW == dMaxW;
 
                 int candOutW = degenerate ? (int)Math.Round(inW * ratioW) : (int)(inW * ratioW * 0.995);
                 int candOutH = degenerate ? (int)Math.Round(inH * ratioH) : (int)(inH * ratioH * 0.995);
 
-                if (!StreamlineDlss.GetRenderRange(candidate, (uint)candOutW, (uint)candOutH,
+                if (!UpscalerRenderRange(candidate, (uint)candOutW, (uint)candOutH,
                         out uint minW, out uint minH, out uint maxW, out uint maxH)
                     || inW < minW || inW > maxW || inH < minH || inH > maxH)
                 {
@@ -3473,6 +3594,200 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
         private readonly System.Collections.Generic.List<(TextureView View, long RetireAfter)> _fgRetired = new();
         private long _presentSerial;
 
+        /// <summary>
+        /// FSR 3.1 in place of the Streamline evaluate, with the two input fix-ups it needs that DLSS
+        /// does not.
+        ///
+        /// <para>Colour: FSR's maths (luma weights, its reversible tonemapper, colour clamping)
+        /// assumes linear light, and this provider has no non-linear input mode. Game frames are
+        /// gamma encoded, so they are decoded to linear on the way in and re-encoded on the way out,
+        /// both by sampling and rendering through sRGB views of the same images.</para>
+        ///
+        /// <para>Depth: FSR reads depth at the colour's pixel coordinates, so a depth buffer at a
+        /// different size (dynamic resolution) is resampled to the colour size first.</para>
+        /// </summary>
+        private bool RunFsr3(
+            CommandBufferScoped cbs,
+            bool reset,
+            float jitterX,
+            float jitterY,
+            TextureView input,
+            TextureView depthSource,
+            in StreamlineDlss.DlssTexture inTex,
+            in StreamlineDlss.DlssTexture outTex,
+            in StreamlineDlss.DlssTexture depthTex,
+            in StreamlineDlss.DlssTexture mvTex,
+            bool hdr)
+        {
+            if (_fsrBypass)
+            {
+                if (!_fsrPathLogged)
+                {
+                    _fsrPathLogged = true;
+                    Logger.Info?.Print(LogClass.Gpu,
+                        $"FSR3 upscale: BYPASS -- pipeline runs, FSR dispatch replaced by a resize {input.Width}x{input.Height} -> {_output.Width}x{_output.Height}.");
+                }
+
+                _gd.HelperShader.BlitColor(
+                    _gd,
+                    cbs,
+                    input,
+                    _output,
+                    new Extents2D(0, 0, input.Width, input.Height),
+                    new Extents2D(0, 0, _output.Width, _output.Height),
+                    linearFilter: true);
+
+                return true;
+            }
+
+            _fsr3 ??= new FsrFg.Fsr3Upscaler(_gd, _device);
+
+            StreamlineDlss.DlssTexture fsrDepth = depthTex;
+
+            if (depthSource != null && (depthSource.Width != input.Width || depthSource.Height != input.Height))
+            {
+                EnsureFsrTemp(ref _fsrDepth, input.Width, input.Height, Format.D32Float, 4);
+
+                _gd.HelperShader.BlitColor(
+                    _gd,
+                    cbs,
+                    depthSource,
+                    _fsrDepth,
+                    new Extents2D(0, 0, depthSource.Width, depthSource.Height),
+                    new Extents2D(0, 0, input.Width, input.Height),
+                    linearFilter: false);
+
+                fsrDepth = Describe(_fsrDepth, cbs);
+            }
+
+            Format? srgb = input.Info.Format switch
+            {
+                Format.R8G8B8A8Unorm => Format.R8G8B8A8Srgb,
+                Format.B8G8R8A8Unorm => Format.B8G8R8A8Srgb,
+                _ => null,
+            };
+
+            // HDR and float inputs are already linear or carry their own encoding; only 8-bit
+            // gamma-encoded frames are converted, and only when the output shares their format.
+            bool linearize = _fsrLinearize && !hdr && srgb.HasValue && _output.Info.Format == input.Info.Format;
+
+            if (!_fsrPathLogged)
+            {
+                _fsrPathLogged = true;
+                Logger.Info?.Print(LogClass.Gpu,
+                    $"FSR3 upscale: color {input.Info.Format} -> {(linearize ? "linearized through sRGB views" : "passed as is")}, " +
+                    $"depth {(depthSource == null ? "none" : $"{depthSource.Width}x{depthSource.Height}")} for color {input.Width}x{input.Height}.");
+            }
+
+            if (!linearize)
+            {
+                FsrBarrier(cbs);
+
+                return _fsr3.Evaluate(cbs, reset, jitterX, jitterY, in inTex, in outTex, in fsrDepth, in mvTex, hdr);
+            }
+
+            EnsureFsrTemp(ref _fsrLinearIn, input.Width, input.Height, Format.R16G16B16A16Float, 8);
+            EnsureFsrTemp(ref _fsrLinearOut, (int)outTex.Width, (int)outTex.Height, Format.R16G16B16A16Float, 8);
+
+            // Identity swizzles on both views: the raw pixels must come out exactly as the DLSS path
+            // leaves them, and a render target view may not swizzle at all.
+            TextureView srgbIn = input.CreateViewImpl(MakeFsrInfo(input.Width, input.Height, srgb.Value, 4), 0, 0);
+
+            _gd.HelperShader.BlitColor(
+                _gd,
+                cbs,
+                srgbIn,
+                _fsrLinearIn,
+                new Extents2D(0, 0, input.Width, input.Height),
+                new Extents2D(0, 0, input.Width, input.Height),
+                linearFilter: false);
+
+            RetireFgVisible(srgbIn);
+            FsrBarrier(cbs);
+
+            StreamlineDlss.DlssTexture linearIn = Describe(_fsrLinearIn, cbs);
+            StreamlineDlss.DlssTexture linearOut = Describe(_fsrLinearOut, cbs);
+
+            if (!_fsr3.Evaluate(cbs, reset, jitterX, jitterY, in linearIn, in linearOut, in fsrDepth, in mvTex, hdr: false))
+            {
+                return false;
+            }
+
+            FsrBarrier(cbs);
+
+            TextureView srgbOut = _output.CreateViewImpl(MakeFsrInfo(_output.Width, _output.Height, srgb.Value, 4), 0, 0);
+
+            _gd.HelperShader.BlitColor(
+                _gd,
+                cbs,
+                _fsrLinearOut,
+                srgbOut,
+                new Extents2D(0, 0, _fsrLinearOut.Width, _fsrLinearOut.Height),
+                new Extents2D(0, 0, _output.Width, _output.Height),
+                linearFilter: false);
+
+            RetireFgVisible(srgbOut);
+
+            return true;
+        }
+
+        private void EnsureFsrTemp(ref TextureView tex, int width, int height, Format format, int bytesPerPixel)
+        {
+            if (tex != null && tex.Width == width && tex.Height == height && tex.Info.Format == format)
+            {
+                return;
+            }
+
+            RetireFgVisible(tex);
+            tex = _gd.CreateTexture(MakeFsrInfo(width, height, format, bytesPerPixel)) as TextureView;
+        }
+
+        private static TextureCreateInfo MakeFsrInfo(int width, int height, Format format, int bytesPerPixel)
+        {
+            return new TextureCreateInfo(
+                width,
+                height,
+                1,
+                1,
+                1,
+                1,
+                1,
+                bytesPerPixel,
+                format,
+                DepthStencilMode.Depth,
+                Target.Texture2D,
+                SwizzleComponent.Red,
+                SwizzleComponent.Green,
+                SwizzleComponent.Blue,
+                SwizzleComponent.Alpha);
+        }
+
+        /// <summary>
+        /// Makes the blits above visible to FSR's compute passes and FSR's output visible to the
+        /// blit after it. FidelityFX's own barriers assume the declared state, not a render pass.
+        /// </summary>
+        private unsafe void FsrBarrier(CommandBufferScoped cbs)
+        {
+            MemoryBarrier barrier = new()
+            {
+                SType = StructureType.MemoryBarrier,
+                SrcAccessMask = AccessFlags.MemoryWriteBit,
+                DstAccessMask = AccessFlags.MemoryReadBit | AccessFlags.MemoryWriteBit,
+            };
+
+            _gd.Api.CmdPipelineBarrier(
+                cbs.CommandBuffer,
+                PipelineStageFlags.AllCommandsBit,
+                PipelineStageFlags.AllCommandsBit,
+                0,
+                1,
+                in barrier,
+                0,
+                null,
+                0,
+                null);
+        }
+
         private void RetireFgVisible(TextureView view)
         {
             if (view == null)
@@ -3601,6 +3916,12 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
 
         public void Dispose()
         {
+            _fsr3?.Dispose();
+            _fsr3 = null;
+            _fsrLinearIn?.Dispose();
+            _fsrLinearOut?.Dispose();
+            _fsrDepth?.Dispose();
+
             DrainFgRetired(all: true);
             _sharpenPass?.Dispose();
             _output?.Dispose();

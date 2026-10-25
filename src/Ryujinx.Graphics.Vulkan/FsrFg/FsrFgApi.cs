@@ -197,8 +197,19 @@ namespace Ryujinx.Graphics.Vulkan.FsrFg
         private static unsafe delegate* unmanaged[Cdecl]<IntPtr*, IntPtr, uint> _dispatch;
 
         /// <summary>Set before device creation, so the queue count can account for FSR-FG.</summary>
-        public static readonly bool Requested =
+        public static bool Requested =
             Environment.GetEnvironmentVariable("RYUJINX_FSR_FG") == "1";
+
+        /// <summary>
+        /// Re-reads the fields above that come from the settings profile, so a changed upscaler
+        /// setting applies at the next game start without restarting the app.
+        /// </summary>
+        internal static void ReloadProfileSettings()
+        {
+            {
+                Requested = Environment.GetEnvironmentVariable("RYUJINX_FSR_FG") == "1";
+            }
+        }
 
         public static bool IsLoaded { get; private set; }
 

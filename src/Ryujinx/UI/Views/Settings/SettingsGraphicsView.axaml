@@ -320,6 +320,8 @@
                                     Content="NIS" />
                                 <ComboBoxItem
                                     Content="DLSS" />
+                                <ComboBoxItem
+                                    Content="AMD FSR 3.1" />
                             </ComboBox>
                             <controls:SliderScroll Value="{Binding ScalingFilterLevel}"
                                     ToolTip.Tip="{ext:Locale GraphicsScalingFilterLevelTooltip}"
@@ -341,7 +343,25 @@
                                        Text="{Binding ScalingFilterLevelText}"/>
                         </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal"
+                                IsVisible="{Binding IsFsr3Selected}">
+                        <TextBlock VerticalAlignment="Center"
+                                   ToolTip.Tip="AMD FSR 3.1 (toutes cartes Vulkan : NVIDIA, AMD, Intel). Upscaling temporel : le jeu est rendu plus petit puis reconstruit à la taille de l'écran. Le mode fixe la résolution de rendu au lancement, en proportion de l'échelle de résolution. amd_fidelityfx_vk.dll doit être dans le dossier fsr\. S'applique au prochain lancement.&#10;&#10;Temporal upscaling for any Vulkan GPU (NVIDIA, AMD, Intel): the game renders smaller and is rebuilt at screen size. The mode sets the render resolution at launch, as a fraction of your resolution scale. Needs amd_fidelityfx_vk.dll in the fsr\ folder. Applied on next app launch."
+                                   Text="AMD FSR 3.1 quality (experimental)"
+                                   Width="250" />
+                        <ComboBox Width="350"
+                                  HorizontalContentAlignment="Left"
+                                  IsEnabled="{Binding IsFsr3MenuEnabled}"
+                                  SelectedIndex="{Binding DlssMode}">
+                            <ComboBoxItem Content="Off" />
+                            <ComboBoxItem Content="Native AA" />
+                            <ComboBoxItem Content="Quality" />
+                            <ComboBoxItem Content="Balanced" />
+                            <ComboBoxItem Content="Performance" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                IsVisible="{Binding !IsFsr3Selected}">
                         <TextBlock VerticalAlignment="Center"
                                    ToolTip.Tip="NVIDIA DLSS / DLAA (RTX). Reconstruction par IA. S'applique au prochain lancement de l'app. / AI reconstruction; applied on next app launch."
                                    Text="NVIDIA DLSS / DLAA (experimental)"
@@ -389,15 +409,15 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
-                                   ToolTip.Tip="Netteté appliquée après le DLSS (RCAS, comme le filtre FSR). 0 = désactivée. Trop haut = halos et scintillement en mouvement. S'applique au prochain lancement. / Sharpening applied after DLSS (RCAS, same as the FSR filter). 0 = off. Too high = halos and shimmer in motion. Applied on next app launch."
-                                   Text="DLSS Sharpening"
+                                   ToolTip.Tip="Netteté appliquée après le DLSS ou le FSR 3.1 (RCAS, comme le filtre FSR). 0 = désactivée. Trop haut = halos et scintillement en mouvement. S'applique immédiatement, même en jeu. / Sharpening applied after DLSS or FSR 3.1 (RCAS, same as the FSR filter). 0 = off. Too high = halos and shimmer in motion. Applies immediately, in-game included."
+                                   Text="Upscaler Sharpening"
                                    Width="250" />
                         <Slider Width="300"
                                 Minimum="0"
                                 Maximum="100"
                                 TickFrequency="5"
                                 IsSnapToTickEnabled="True"
-                                IsEnabled="{Binding IsDlssMenuEnabled}"
+                                IsEnabled="{Binding IsUpscalerSharpenMenuEnabled}"
                                 Value="{Binding DlssSharpenLevel}" />
                         <TextBlock VerticalAlignment="Center"
                                    Margin="10,0,0,0"
