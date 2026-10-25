@@ -1380,6 +1380,13 @@ namespace Ryujinx.Ava.Systems
                 text += "\n" + resolution;
             }
 
+            int shaderCompiles = Graphics.Vulkan.PerformanceOverlay.RecentShaderCompiles;
+
+            if (shaderCompiles != 0)
+            {
+                text += string.Create(CultureInfo.InvariantCulture, $"\nCOMPILING SHADERS ({shaderCompiles})");
+            }
+
             Graphics.Vulkan.PerformanceOverlay.SetText(text);
         }
 

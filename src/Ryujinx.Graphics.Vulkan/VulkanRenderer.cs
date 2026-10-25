@@ -679,6 +679,11 @@ namespace Ryujinx.Graphics.Vulkan
         {
             ProgramCount++;
 
+            if (!info.FromCache)
+            {
+                PerformanceOverlay.NoteShaderCompiled();
+            }
+
             bool isCompute = sources.Length == 1 && sources[0].Stage == ShaderStage.Compute;
 
             ShaderCollection program;

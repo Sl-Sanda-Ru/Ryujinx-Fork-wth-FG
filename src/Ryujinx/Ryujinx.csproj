@@ -114,7 +114,7 @@
       <TargetPath>THIRDPARTY.md</TargetPath>
       <Visible>False</Visible>
     </Content>
-    <Content Include="..\..\LICENSE.txt">
+    <Content Include="..\..\LICENSE">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>LICENSE.txt</TargetPath>
       <Visible>False</Visible>

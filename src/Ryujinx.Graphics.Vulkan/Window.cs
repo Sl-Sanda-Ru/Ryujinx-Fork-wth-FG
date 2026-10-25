@@ -47,6 +47,9 @@ namespace Ryujinx.Graphics.Vulkan
 
         private int _width;
         private int _height;
+        private int _requestedWidth;
+        private int _requestedHeight;
+        private int _sizeRecheckFrames;
         private VSyncMode _vSyncMode;
         private bool _swapchainIsDirty;
         private VkFormat _format;
@@ -749,6 +752,16 @@ namespace Ryujinx.Graphics.Vulkan
             uint nextImage = 0;
             int semaphoreIndex = _frameIndex++ % _imageAvailableSemaphores.Length;
 
+            if (!_swapchainIsDirty && _sizeRecheckFrames > 0)
+            {
+                _sizeRecheckFrames--;
+
+                if (SurfaceExtentChanged())
+                {
+                    _swapchainIsDirty = true;
+                }
+            }
+
             while (true)
             {
                 if (_swapchainIsDirty)
@@ -1354,6 +1367,11 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
+            if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr)
+            {
+                _swapchainIsDirty = true;
+            }
+
             if (result != Result.Success && result != Result.SuboptimalKhr)
             {
                 Logger.Warning?.Print(LogClass.Gpu,
@@ -1644,8 +1662,35 @@ namespace Ryujinx.Graphics.Vulkan
 
         public override void SetSize(int width, int height)
         {
-            // We don't need to use width and height as we can get the size from the surface.
+            // The swapchain takes its size from the surface, but on a fullscreen toggle the window
+            // can be resized after the swapchain was recreated, leaving it at the old size. The
+            // frame generation proxies don't report that as out of date, so keep checking the
+            // surface for a while until it matches the requested size.
+            _requestedWidth = width;
+            _requestedHeight = height;
+            _sizeRecheckFrames = SizeRecheckFrameCount;
             _swapchainIsDirty = true;
+        }
+
+        private const int SizeRecheckFrameCount = 120;
+
+        private bool SurfaceExtentChanged()
+        {
+            _gd.SurfaceApi.GetPhysicalDeviceSurfaceCapabilities(_physicalDevice, _surface, out SurfaceCapabilitiesKHR capabilities);
+
+            Extent2D extent = ChooseSwapExtent(capabilities);
+
+            if (extent.Width == 0 || extent.Height == 0)
+            {
+                return false;
+            }
+
+            if (extent.Width == (uint)_requestedWidth && extent.Height == (uint)_requestedHeight)
+            {
+                _sizeRecheckFrames = Math.Min(_sizeRecheckFrames, 1);
+            }
+
+            return extent.Width != (uint)_width || extent.Height != (uint)_height;
         }
 
         public override void ChangeVSyncMode(VSyncMode vSyncMode)

@@ -59,6 +59,38 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
+        private const long ShaderCompileHoldMs = 1000;
+
+        private static long _shaderCompileLastMs;
+        private static int _shaderCompileBurst;
+
+        /// <summary>
+        /// Called for every program compiled while the game runs (not loaded from the disk cache).
+        /// Compiles come in bursts, so the count is how many the current burst has compiled so far.
+        /// </summary>
+        internal static void NoteShaderCompiled()
+        {
+            long now = Environment.TickCount64;
+
+            if (now - Interlocked.Exchange(ref _shaderCompileLastMs, now) >= ShaderCompileHoldMs)
+            {
+                Interlocked.Exchange(ref _shaderCompileBurst, 1);
+            }
+            else
+            {
+                Interlocked.Increment(ref _shaderCompileBurst);
+            }
+        }
+
+        /// <summary>
+        /// Shader compilation count for the overlay, or 0 once no shader has been compiled for a
+        /// second. Held that long so a single compile stays on screen long enough to read.
+        /// </summary>
+        public static int RecentShaderCompiles =>
+            Environment.TickCount64 - Interlocked.Read(ref _shaderCompileLastMs) < ShaderCompileHoldMs
+                ? Volatile.Read(ref _shaderCompileBurst)
+                : 0;
+
         private static long _presentsInWindow;
         private static long _windowStartMs;
         private static long _hostPresentFpsMilli;
