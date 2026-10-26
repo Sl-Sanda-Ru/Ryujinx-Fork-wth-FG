@@ -1,0 +1,95 @@
+name: Build release
+
+# Push a tag like v1.2.3 to build and publish a GitHub release, or run it by hand from the
+# Actions tab to build an artifact (and optionally a release).
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version, e.g. 1.2.3 (empty: 0.0.0-ci.<run number>)"
+        required: false
+        default: ""
+      create_release:
+        description: "Also create a GitHub release tagged v<version>"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Build win-x64
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Get version
+        id: version
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          elif [[ -n "$INPUT_VERSION" ]]; then
+            version="${INPUT_VERSION#v}"
+          else
+            version="0.0.0-ci.${{ github.run_number }}"
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "hash=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      # ReleaseInformation.cs is deliberately left unstamped: a stamped build enables the in-app
+      # updater, which pulls from the upstream Beast Roofer update server and would replace this fork.
+      - name: Publish
+        shell: bash
+        run: >
+          dotnet publish src/Ryujinx/Ryujinx.csproj -c Release -r win-x64 --self-contained
+          -o publish
+          -p:Version="${{ steps.version.outputs.version }}"
+          -p:SourceRevisionId="${{ steps.version.outputs.hash }}"
+          -p:DebugType=embedded
+
+      - name: Add FidelityFX libraries
+        shell: bash
+        run: cp -r fsr publish/
+
+      - name: Package
+        id: package
+        shell: pwsh
+        run: |
+          $name = "ryujinx-fg-${{ steps.version.outputs.version }}-win_x64"
+          Compress-Archive -Path publish/* -DestinationPath "$name.zip"
+          "name=$name" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.name }}
+          path: publish/
+          if-no-files-found: error
+
+      - name: Create GitHub release
+        if: github.ref_type == 'tag' || inputs.create_release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "v${{ steps.version.outputs.version }}"
+          "${{ steps.package.outputs.name }}.zip"
+          --target "$GITHUB_SHA"
+          --title "v${{ steps.version.outputs.version }}"
+          --generate-notes
