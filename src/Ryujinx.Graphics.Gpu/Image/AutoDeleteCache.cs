@@ -129,8 +129,8 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                     Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
                         $"CACHEPROBE: cache {_textures.Count}/{MaxCapacity} textures, " +
-                        $"{_totalSize / (1024 * 1024)} Mo / {_maxCacheMemoryUsage / (1024 * 1024)} Mo, " +
-                        $"{_probeEvictions} evictions depuis le dernier point.");
+                        $"{_totalSize / (1024 * 1024)} MB / {_maxCacheMemoryUsage / (1024 * 1024)} MB, " +
+                        $"{_probeEvictions} evictions since the last report.");
 
                     _probeEvictions = 0;
                 }

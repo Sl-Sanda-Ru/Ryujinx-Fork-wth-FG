@@ -538,8 +538,8 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
             {
                 _hudlessLogged = true;
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"DLSS-FG: HUD-less tague {hudless.Width}x{hudless.Height} " +
-                    $"(couleur {SwapchainWidth}x{SwapchainHeight}) -> slSetTagForFrame = {SlResult(r)}.");
+                    $"DLSS-FG: HUD-less tagged {hudless.Width}x{hudless.Height} " +
+                    $"(color {SwapchainWidth}x{SwapchainHeight}) -> slSetTagForFrame = {SlResult(r)}.");
             }
             if (r != 0)
             {
@@ -643,9 +643,9 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                     _fgX1Reports = 0;
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        "DLSS-FG WATCHDOG: enabled mais x1 persistant (~8 s) -> cycle eOff/eOn (auto-réanimation, même remède que F11).");
+                        "DLSS-FG WATCHDOG: enabled but stuck at x1 (~8 s) -> cycling eOff/eOn (self-revival, same fix as F11).");
 
-                    DisableFrameGeneration(viewportId, "watchdog x1 persistant");
+                    DisableFrameGeneration(viewportId, "watchdog stuck at x1");
                     _sizeStableFrames = 0;
                 }
             }

@@ -40,7 +40,7 @@ namespace Ryujinx.Graphics.Gpu.Image
 
                 System.Text.StringBuilder sb = new();
                 sb.Append($"GOBPROBE: clamp gobBlocksInZ->1 fired {_total} times, {_shapes.Count} distinct shapes");
-                sb.Append(ClampDisabled ? " [CLAMP DESACTIVE]" : "");
+                sb.Append(ClampDisabled ? " [CLAMP DISABLED]" : "");
                 sb.Append(':');
 
                 int shown = 0;
@@ -49,7 +49,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 {
                     if (shown++ >= 8)
                     {
-                        sb.Append($" (+{_shapes.Count - 8} autres)");
+                        sb.Append($" (+{_shapes.Count - 8} others)");
 
                         break;
                     }

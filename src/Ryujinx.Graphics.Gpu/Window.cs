@@ -355,8 +355,8 @@ namespace Ryujinx.Graphics.Gpu
                     {
                         _jitTraceMs = Environment.TickCount64;
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"JITTRACE B (defile+publie) : jx={orderedJx:0.000000} jy={orderedJy:0.000000} " +
-                            $"valide={orderedValid} frais={DlssCameraState.LastConsumeFresh}");
+                            $"JITTRACE B (dequeued+published) : jx={orderedJx:0.000000} jy={orderedJy:0.000000} " +
+                            $"valid={orderedValid} fresh={DlssCameraState.LastConsumeFresh}");
                     }
 
                     if (MvppDev.Enabled && Environment.TickCount64 - _mvppFifoLogMs >= 5000)

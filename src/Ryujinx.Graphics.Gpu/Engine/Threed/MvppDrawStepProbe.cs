@@ -82,9 +82,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     _announced = true;
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP DRAWSTEP: armed -- APPUIE SUR F10 quand tu VOIS l'artefact. Chaque appui capture une " +
-                        $"image entiere ({_maxSteps} cliches, un tous les {_everyDraws} draws). {_frames} appuis au " +
-                        "maximum. Le jeu figera brievement a chaque fois : c'est la capture.");
+                        $"MVPP DRAWSTEP: armed -- PRESS F10 when you SEE the artifact. Each press captures a " +
+                        $"whole frame ({_maxSteps} snapshots, one every {_everyDraws} draws). {_frames} presses at " +
+                        "most. The game will freeze briefly each time: that is the capture.");
                 }
 
                 if (_capturing)
@@ -98,11 +98,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                             string pname = $"ZFINAL_presente_{presented.Info.Width}x{presented.Info.Height}_{presented.Info.FormatInfo.Format}.bin";
                             File.WriteAllBytes(Path.Combine(_dir, pname), pbytes.ToArray());
 
-                            Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: {pname} ({pbytes.Length} octets) -- image telle que presentee.");
+                            Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: {pname} ({pbytes.Length} bytes) -- frame as presented.");
                         }
                         catch (Exception pe)
                         {
-                            Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: image presentee illisible: {pe.Message}");
+                            Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: presented frame unreadable: {pe.Message}");
                         }
                     }
 
@@ -110,13 +110,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _nextMs = now + _gapMs;
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP DRAWSTEP: image {_frameNo}/{_frames} terminee -- {_stepNo} cliches sur {_drawNo} draws, dans {_dir}. " +
-                        $"COMPUTE: {_csDispatches} dispatchs, {_csBindings} bindings, {_csImages} images, {_csStores} en ecriture.");
+                        $"MVPP DRAWSTEP: frame {_frameNo}/{_frames} done -- {_stepNo} snapshots over {_drawNo} draws, in {_dir}. " +
+                        $"COMPUTE: {_csDispatches} dispatches, {_csBindings} bindings, {_csImages} images, {_csStores} written.");
 
                     if (_frameNo >= _frames)
                     {
                         _done = true;
-                        Logger.Info?.Print(LogClass.Gpu, "MVPP DRAWSTEP: toutes les images sont capturees.");
+                        Logger.Info?.Print(LogClass.Gpu, "MVPP DRAWSTEP: all frames captured.");
                     }
 
                     return;
@@ -135,12 +135,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 _csDispatches = _csBindings = _csImages = _csStores = 0;
                 _capturing = true;
 
-                Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: capture de l'image {_frameNo}/{_frames} -> {_dir}");
+                Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: capturing frame {_frameNo}/{_frames} -> {_dir}");
             }
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: desactive apres erreur: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: disabled after error: {e.Message}");
             }
         }
 
@@ -194,7 +194,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: desactive apres erreur compute: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: disabled after compute error: {e.Message}");
             }
         }
 
@@ -230,7 +230,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     File.WriteAllBytes(Path.Combine(_dir, name), bytes.ToArray());
                     _stepNo++;
 
-                    Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: {name} ({bytes.Length} octets).");
+                    Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: {name} ({bytes.Length} bytes).");
                 });
 
                 channel.TextureManager.MvppEnumerateGraphicsInputsStage((stage, tex) =>
@@ -247,13 +247,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     File.WriteAllBytes(Path.Combine(_dir, iname), ibytes.ToArray());
                     _stepNo++;
 
-                    Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: {iname} (entree echantillonnee).");
+                    Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: {iname} (sampled input).");
                 });
             }
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: desactive apres erreur de lecture: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: disabled after read error: {e.Message}");
             }
         }
 
@@ -287,13 +287,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     File.WriteAllBytes(Path.Combine(_dir, name), bytes.ToArray());
                     _stepNo++;
 
-                    Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: {name} (apres ecriture).");
+                    Logger.Info?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: {name} (after write).");
                 });
             }
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: desactive apres erreur POST: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP DRAWSTEP: disabled after POST error: {e.Message}");
             }
         }
     }

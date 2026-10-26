@@ -89,16 +89,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _lastLogMs = now;
 
             System.Text.StringBuilder sb = new();
-            sb.Append($"GLOWPROBE: {_drawsToGlow} draws vers le buffer HDR {w}x{h}, {_scissored} avec une boite de decoupe");
-            sb.Append($" (ecran {screen.X},{screen.Y} {screen.Width}x{screen.Height})");
+            sb.Append($"GLOWPROBE: {_drawsToGlow} draws to the HDR buffer {w}x{h}, {_scissored} with a scissor box");
+            sb.Append($" (screen {screen.X},{screen.Y} {screen.Width}x{screen.Height})");
 
             if (_boxes.Count == 0)
             {
-                sb.Append(" -- AUCUNE boite: les rectangles ne viennent PAS du scissor.");
+                sb.Append(" -- NO box: the rectangles do NOT come from the scissor.");
             }
             else
             {
-                sb.Append($", {_boxes.Count} boites distinctes:");
+                sb.Append($", {_boxes.Count} distinct boxes:");
                 int shown = 0;
 
                 foreach (KeyValuePair<string, int> kv in _boxes)
@@ -116,7 +116,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             if (_inputs.Count > 0)
             {
-                System.Text.StringBuilder ib = new("GLOWPROBE textures lues par ces draws:");
+                System.Text.StringBuilder ib = new("GLOWPROBE textures read by these draws:");
                 int k = 0;
 
                 foreach (KeyValuePair<string, int> kv in _inputs)

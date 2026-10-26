@@ -314,7 +314,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     _guardLogMs = gnow;
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP capture guard: square DS rejected from scene publication ({ds.Info.Width}x{ds.Info.Height}, cumul {_guardRejects}).");
+                        $"MVPP capture guard: square DS rejected from scene publication ({ds.Info.Width}x{ds.Info.Height}, total {_guardRejects}).");
                 }
 
                 return;
@@ -694,8 +694,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                             $"MVPP capture why: raw {_cwRaw}, qual {_cwQual}, need {_cwNeed}, impl {_cwImpl}, " +
                             $"cachedOk {_cwCachedOk}, held {_cwHeld}, rescanOk {_cwRescanOk}, " +
                             $"soloCall {_cwSoloCall}, soloOk {_cwSoloOk}, " +
-                            $"rien {_cwImpl - _cwCachedOk - _cwHeld - _cwRescanOk - _cwSoloOk} | " +
-                            $"img: sansDessin {_cwFramesNoDraw}, toutPrefiltre {_cwFramesPrefiltred}, ok {_cwFramesOk}.");
+                            $"none {_cwImpl - _cwCachedOk - _cwHeld - _cwRescanOk - _cwSoloOk} | " +
+                            $"frames: noDraw {_cwFramesNoDraw}, allPrefiltered {_cwFramesPrefiltred}, ok {_cwFramesOk}.");
                     }
                 }
 
@@ -771,7 +771,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             MvppSoloCamera.CopyFailCounts(_dupFailNow);
 
             var sb = new System.Text.StringBuilder();
-            sb.Append($"MVPP PRODUCTION: lectures distinctes={_soloDistinct} identiques={_soloSame} | echecs: ");
+            sb.Append($"MVPP PRODUCTION: reads distinct={_soloDistinct} identical={_soloSame} | fails: ");
 
             int n = Math.Min(MvppSoloCamera.FailReasonCount, _dupFailNow.Length);
             int total = 0;
@@ -903,8 +903,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     {
                         _jitTraceMs = Environment.TickCount64;
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"JITTRACE A (pousse) : jx={pushJx:0.000000} jy={pushJy:0.000000} " +
-                            $"soit ({pushJx * 960f:0.000};{pushJy * 540f:0.000}) px a 1920x1080");
+                            $"JITTRACE A (pushed) : jx={pushJx:0.000000} jy={pushJy:0.000000} " +
+                            $"i.e. ({pushJx * 960f:0.000};{pushJy * 540f:0.000}) px at 1920x1080");
                     }
                 }
                 else if (_fifoMode)

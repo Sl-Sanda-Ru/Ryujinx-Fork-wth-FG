@@ -59,7 +59,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 }
                 catch (Exception e)
                 {
-                    Logger.Warning?.Print(LogClass.Gpu, $"RTDUMP: presented illisible: {e.GetType().Name} {e.Message}");
+                    Logger.Warning?.Print(LogClass.Gpu, $"RTDUMP: presented unreadable: {e.GetType().Name} {e.Message}");
                 }
 
                 return;
@@ -78,7 +78,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _nextBurstMs = Environment.TickCount64 + _everySeconds * 1000L;
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"RTDUMP: image {_burstIndex}/{_maxBursts} complete, {_doneThisBurst.Count} tampons.");
+                        $"RTDUMP: frame {_burstIndex}/{_maxBursts} complete, {_doneThisBurst.Count} buffers.");
 
                     return;
                 }
@@ -99,9 +99,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     _frameArmLogged = true;
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"RTDUMP: armed en MODE IMAGE -- premiere image dans {_startSeconds}s, puis toutes les " +
-                        $"{_everySeconds}s, {_maxBursts} images. Une rafale == UNE image : cibles et resultat presente " +
-                        "appartiennent a la MEME image.");
+                        $"RTDUMP: armed in FRAME MODE -- first frame in {_startSeconds}s, then every " +
+                        $"{_everySeconds}s, {_maxBursts} frames. One burst == ONE frame: targets and presented result " +
+                        "belong to the SAME frame.");
                 }
 
                 if (now < _nextBurstMs)
@@ -115,12 +115,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 Directory.CreateDirectory(_burstDir);
                 _bursting = true;
 
-                Logger.Info?.Print(LogClass.Gpu, $"RTDUMP: image {_burstIndex}/{_maxBursts} ouverte -> {_burstDir}");
+                Logger.Info?.Print(LogClass.Gpu, $"RTDUMP: frame {_burstIndex}/{_maxBursts} opened -> {_burstDir}");
             }
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"RTDUMP: mode image desactive apres erreur: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"RTDUMP: frame mode disabled after error: {e.Message}");
             }
         }
 
@@ -269,12 +269,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 File.WriteAllBytes(path, bytes.ToArray());
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"RTDUMP: {name}.bin ({bytes.Length} octets, {tex.Info.Width}x{tex.Info.Height} " +
+                    $"RTDUMP: {name}.bin ({bytes.Length} bytes, {tex.Info.Width}x{tex.Info.Height} " +
                     $"{tex.Info.FormatInfo.Format}, {tex.Info.Target}).");
             }
             catch (Exception e)
             {
-                Logger.Warning?.Print(LogClass.Gpu, $"RTDUMP: {name} illisible: {e.GetType().Name} {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"RTDUMP: {name} unreadable: {e.GetType().Name} {e.Message}");
             }
         }
     }

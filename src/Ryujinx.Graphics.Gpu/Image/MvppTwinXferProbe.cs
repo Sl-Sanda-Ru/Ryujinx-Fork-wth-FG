@@ -53,7 +53,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                 _summaryMs = now;
                 Logger.Warning?.Print(LogClass.Gpu,
                     $"[TWINXFER/HEARTBEAT ~3s] copies={_copies} distinctPairs={_copyPairs.Count} | imageBinds={_imageBinds} distinctTuples={_imageTuples.Count} | " +
-                    $"dmaHits={_dmaHits} distinctDma={_dmaPairs.Count} (twins connus: {MvppTwinMapProbe.TwinVas().Length})");
+                    $"dmaHits={_dmaHits} distinctDma={_dmaPairs.Count} (known twins: {MvppTwinMapProbe.TwinVas().Length})");
             }
         }
 

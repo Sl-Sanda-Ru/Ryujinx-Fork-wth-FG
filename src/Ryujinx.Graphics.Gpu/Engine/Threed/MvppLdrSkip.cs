@@ -219,16 +219,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _abArmed = true;
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP NOLDR A/B : camera chaude ({WarmCaptures} captures), debut de " +
-                        $"l'alternance par tranches de {WindowFrames} images. La restriction " +
-                        "s'allume et s'eteint toute seule ; les deux moities se comparent sur la " +
-                        "MEME scene et le MEME geste.");
+                        $"MVPP NOLDR A/B : camera warm ({WarmCaptures} captures), starting " +
+                        $"alternation in slices of {WindowFrames} frames. The restriction " +
+                        "turns on and off by itself; both halves are compared on the " +
+                        "SAME scene and the SAME movement.");
                 }
                 else
                 {
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP NOLDR : camera chaude ({WarmCaptures} captures), debut du calibrage " +
-                        $"sur {CalibrationFrames} images SANS restriction.");
+                        $"MVPP NOLDR : camera warm ({WarmCaptures} captures), starting calibration " +
+                        $"over {CalibrationFrames} frames WITHOUT restriction.");
                 }
 
                 _phase = AbMode ? PhaseArmed : PhaseCalibrating;
@@ -267,8 +267,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _winMisses = 0;
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP NOLDR fin de suspension #{_suspends} : recalibrage sur " +
-                        $"{CalibrationFrames} images ICI, puis nouvelle tentative.");
+                        $"MVPP NOLDR end of suspension #{_suspends} : recalibrating over " +
+                        $"{CalibrationFrames} frames HERE, then retrying.");
                 }
 
                 ReportPlain();
@@ -291,10 +291,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 _winMisses = 0;
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP NOLDR calibrage termine : ratage de reference {100f * _baseMissRate:0.#} % " +
-                    $"sur {CalibrationFrames} images, camera chaude, mesure ICI sans restriction. " +
-                    $"Restriction ARMEE ; coupure si une fenetre de {WindowFrames} images depasse ce " +
-                    $"taux de plus de {100f * MarginPoints:0} points.");
+                    $"MVPP NOLDR calibration done : baseline miss rate {100f * _baseMissRate:0.#} % " +
+                    $"over {CalibrationFrames} frames, camera warm, measured HERE without restriction. " +
+                    $"Restriction ARMED; cut off if a window of {WindowFrames} frames exceeds this " +
+                    $"rate by more than {100f * MarginPoints:0} points.");
 
                 return;
             }
@@ -315,10 +315,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         _phase = PhaseDisarmed;
 
                         Logger.Warning?.Print(LogClass.Gpu,
-                            $"MVPP NOLDR ABANDON : {_suspends}e exces (ratage {100f * rate:0.#} % contre " +
-                            $"{100f * _baseMissRate:0.#} % calibre). Ecarter la passe 8 bits affame la camera " +
-                            "de facon repetee sur ce jeu. Retour au comportement d'avant pour le reste de " +
-                            "la session, et il faut le savoir : le correctif ne tient pas ici.");
+                            $"MVPP NOLDR ABANDON : excess #{_suspends} (miss rate {100f * rate:0.#} % vs " +
+                            $"{100f * _baseMissRate:0.#} % calibrated). Skipping the 8-bit pass starves the camera " +
+                            "repeatedly in this game. Reverting to the previous behavior for the rest of " +
+                            "the session -- note this: the fix does not hold here.");
                     }
                     else
                     {
@@ -326,11 +326,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         _suspendLeft = SuspendFrames;
 
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP NOLDR suspendu #{_suspends} : ratage {100f * rate:0.#} % contre " +
-                            $"{100f * _baseMissRate:0.#} % calibre (+{100f * (rate - _baseMissRate):0.#} points, " +
-                            $"marge {100f * MarginPoints:0}). Restriction levee pour {SuspendFrames} images, " +
-                            "puis RECALIBRAGE sur place et nouvelle tentative -- la famine est peut-etre " +
-                            "propre a cette scene.");
+                            $"MVPP NOLDR suspended #{_suspends} : miss rate {100f * rate:0.#} % vs " +
+                            $"{100f * _baseMissRate:0.#} % calibrated (+{100f * (rate - _baseMissRate):0.#} points, " +
+                            $"margin {100f * MarginPoints:0}). Restriction lifted for {SuspendFrames} frames, " +
+                            "then RECALIBRATING in place and retrying -- the starvation may be " +
+                            "specific to this scene.");
                     }
                 }
             }
@@ -350,19 +350,19 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _lastReportMs = now;
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP NOLDR A/B [tranche en cours : {(_abArmed ? "AVEC" : "SANS")}] · " +
-                $"ecartes : {_skipsRank} au rang 1, {_skipsLdr} en 8 bits");
+                $"MVPP NOLDR A/B [current slice: {(_abArmed ? "WITH" : "WITHOUT")}] · " +
+                $"skipped: {_skipsRank} at rank 1, {_skipsLdr} as 8-bit");
 
-            Dump("AVEC restriction", 1);
-            Dump("SANS restriction", 0);
+            Dump("WITH restriction", 1);
+            Dump("WITHOUT restriction", 0);
         }
 
         private static void Dump(string label, int p)
         {
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP NOLDR A/B   {label} : {_abFrames[p]} images · " +
-                $"ratage {(_abFrames[p] > 0 ? 100f * _abMisses[p] / _abFrames[p] : 0f):0.#} % · " +
-                $"{_abReads[p]} lectures · {_abIntruders[p]} intruses " +
+                $"MVPP NOLDR A/B   {label} : {_abFrames[p]} frames · " +
+                $"miss rate {(_abFrames[p] > 0 ? 100f * _abMisses[p] / _abFrames[p] : 0f):0.#} % · " +
+                $"{_abReads[p]} reads · {_abIntruders[p]} intruders " +
                 $"({(_abReads[p] > 0 ? 100f * _abIntruders[p] / _abReads[p] : 0f):0.##} %)");
         }
 
@@ -384,11 +384,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             string phase = _phase switch
             {
-                PhaseWarming => $"CHAUFFE ({_warmCaptured}/{WarmCaptures})",
-                PhaseCalibrating => $"CALIBRAGE ({_winFrames}/{CalibrationFrames})",
-                PhaseArmed => "ARME",
-                PhaseSuspended => $"SUSPENDU ({_suspendLeft} img restantes, exces #{_suspends})",
-                _ => $"ABANDONNE apres {_suspends} exces",
+                PhaseWarming => $"WARMING ({_warmCaptured}/{WarmCaptures})",
+                PhaseCalibrating => $"CALIBRATING ({_winFrames}/{CalibrationFrames})",
+                PhaseArmed => "ARMED",
+                PhaseSuspended => $"SUSPENDED ({_suspendLeft} frames left, excess #{_suspends})",
+                _ => $"ABANDONED after {_suspends} excesses",
             };
 
             if (MissWhy)
@@ -396,17 +396,17 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 int tot = _missA + _missB + _missC;
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP MISSWHY : {tot} images ratees avec restriction armee · " +
-                    $"A (aucune alternative, la restriction EST la cause) {_missA} " +
+                    $"MVPP MISSWHY : {tot} frames missed with restriction armed · " +
+                    $"A (no alternative, the restriction IS the cause) {_missA} " +
                     $"({Share(_missA, tot)}) · " +
-                    $"B (alternatives tentees et echouees, AMBIGU) {_missB} ({Share(_missB, tot)}) · " +
-                    $"C (rien d'ecarte, ratage de fond) {_missC} ({Share(_missC, tot)})");
+                    $"B (alternatives tried and failed, AMBIGUOUS) {_missB} ({Share(_missB, tot)}) · " +
+                    $"C (nothing skipped, background miss) {_missC} ({Share(_missC, tot)})");
             }
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP NOLDR [{phase}] : ecartes {_skipsRank} au rang 1 / {_skipsLdr} en 8 bits · ratage calibre " +
-                $"{(_phase <= PhaseCalibrating ? "(en cours)" : $"{100f * _baseMissRate:0.#} %")}" +
-                $"{(_lastWinMissRate >= 0f ? $" · derniere fenetre {100f * _lastWinMissRate:0.#} %" : "")}");
+                $"MVPP NOLDR [{phase}] : skipped {_skipsRank} at rank 1 / {_skipsLdr} as 8-bit · calibrated miss rate " +
+                $"{(_phase <= PhaseCalibrating ? "(in progress)" : $"{100f * _baseMissRate:0.#} %")}" +
+                $"{(_lastWinMissRate >= 0f ? $" · last window {100f * _lastWinMissRate:0.#} %" : "")}");
         }
     }
 }

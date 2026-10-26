@@ -96,15 +96,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         _disarmed = true;
 
                         Logger.Warning?.Print(LogClass.Gpu,
-                            $"MVPP SCENEPASS DESARME : {_catchUps} rattrapages, la passe de scene HDR " +
-                            "n'est pas assez fiable sur ce jeu pour porter la capture. Retour au " +
-                            "comportement d'avant pour le reste de la session.");
+                            $"MVPP SCENEPASS DISARMED : {_catchUps} catch-ups, the HDR scene pass " +
+                            "is not reliable enough in this game to carry the capture. Reverting to the " +
+                            "previous behavior for the rest of the session.");
                     }
                     else
                     {
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP SCENEPASS rattrapage #{_catchUps} : {MissesBeforeCatchUp} images " +
-                            $"d'affilee sans capture, restriction levee pour {CatchUpFrames} images.");
+                            $"MVPP SCENEPASS catch-up #{_catchUps} : {MissesBeforeCatchUp} frames " +
+                            $"in a row without capture, restriction lifted for {CatchUpFrames} frames.");
                     }
                 }
             }
@@ -116,11 +116,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 _lastReportMs = now;
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP SCENEPASS : {_frames} images 3D, {_captured} avec camera " +
+                    $"MVPP SCENEPASS : {_frames} 3D frames, {_captured} with camera " +
                     $"({(_frames > 0 ? 100f * _captured / _frames : 0f):0.#} %), " +
-                    $"{_skips} dessins sautes, {_catchUps} rattrapages " +
-                    $"({_catchUpFramesSeen} images en rattrapage)" +
-                    $"{(_disarmed ? " · DESARME" : "")}");
+                    $"{_skips} draws skipped, {_catchUps} catch-ups " +
+                    $"({_catchUpFramesSeen} frames in catch-up)" +
+                    $"{(_disarmed ? " · DISARMED" : "")}");
             }
         }
     }

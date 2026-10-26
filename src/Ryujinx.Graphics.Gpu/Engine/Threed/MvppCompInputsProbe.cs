@@ -61,16 +61,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     _announced = true;
                     Logger.Info?.Print(LogClass.Gpu,
-                        "MVPP COMPIN: ON -- recensement gobBlocksInY des textures pleine res (cibles + entrees).");
+                        "MVPP COMPIN: ON -- gobBlocksInY census of full-res textures (targets + inputs).");
                 }
 
-                channel.TextureManager.MvppEnumerateRenderTargets((slot, rt) => Note(rt, $"CIBLE slot{slot}"));
-                channel.TextureManager.MvppEnumerateGraphicsInputs(tex => Note(tex, "ENTREE"));
+                channel.TextureManager.MvppEnumerateRenderTargets((slot, rt) => Note(rt, $"TARGET slot{slot}"));
+                channel.TextureManager.MvppEnumerateGraphicsInputs(tex => Note(tex, "INPUT"));
             }
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP COMPIN: desactive apres erreur: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP COMPIN: disabled after error: {e.Message}");
             }
         }
     }

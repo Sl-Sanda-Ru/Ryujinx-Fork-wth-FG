@@ -63,7 +63,7 @@ namespace Ryujinx.Graphics.Gpu.Image
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP CACHEOPS: desactive apres erreur: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP CACHEOPS: disabled after error: {e.Message}");
             }
         }
 
@@ -92,8 +92,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             _nextLogMs = now + 2000;
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP CACHEOPS: {_copyDeps} copies dep ({_mismatch} DIFFERENTES) | {_syncs} appels sync dont " +
-                $"{_realSyncs} RECHARGENT ({_realNoData} sans donnees prealables) sur {_realShapes.Count} formes.");
+                $"MVPP CACHEOPS: {_copyDeps} dep copies ({_mismatch} DIFFERENT) | {_syncs} sync calls, of which " +
+                $"{_realSyncs} RELOAD ({_realNoData} with no prior data) across {_realShapes.Count} shapes.");
 
             int shown = 0;
 
@@ -104,7 +104,7 @@ namespace Ryujinx.Graphics.Gpu.Image
                     break;
                 }
 
-                Logger.Info?.Print(LogClass.Gpu, $"MVPP CACHEOPS:   recharge x{kv.Value}  {kv.Key}");
+                Logger.Info?.Print(LogClass.Gpu, $"MVPP CACHEOPS:   reload x{kv.Value}  {kv.Key}");
             }
 
             _copyDeps = 0;

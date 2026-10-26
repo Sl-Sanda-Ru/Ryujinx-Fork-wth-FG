@@ -311,7 +311,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             {
                 _bufCoalArmedLogged = true;
                 Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                    $"[BUFCOAL] ARME (RYUJINX_BUFCOAL=1, trou tolere {_bufCoalGap} o) - coalescence des uploads buffer.");
+                    $"[BUFCOAL] ARMED (RYUJINX_BUFCOAL=1, tolerated gap {_bufCoalGap} B) - coalescing buffer uploads.");
             }
 
             if (_modifiedRanges != null)

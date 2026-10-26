@@ -741,13 +741,13 @@ namespace Ryujinx.Graphics.Vulkan
             {
                 if (ProvokingVertexOverride.Active)
                 {
-                    Logger.Info?.Print(LogClass.Gpu, "PROVOKING: ARME - flat varyings resolved from the LAST vertex");
+                    Logger.Info?.Print(LogClass.Gpu, "PROVOKING: ARMED - flat varyings resolved from the LAST vertex");
                 }
                 else
                 {
                     Logger.Warning?.Print(LogClass.Gpu,
-                        $"PROVOKING: DEMANDE MAIS INACTIF - extension present: {physicalDevice.IsDeviceExtensionPresent(ProvokingVertexOverride.ExtensionName)}, " +
-                        $"provokingVertexLast: {supportedFeaturesProvokingVertex.ProvokingVertexLast}. Le test n'a PAS eu lieu.");
+                        $"PROVOKING: REQUESTED BUT INACTIVE - extension present: {physicalDevice.IsDeviceExtensionPresent(ProvokingVertexOverride.ExtensionName)}, " +
+                        $"provokingVertexLast: {supportedFeaturesProvokingVertex.ProvokingVertexLast}. The test did NOT run.");
                 }
             }
 

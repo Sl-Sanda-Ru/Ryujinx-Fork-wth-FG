@@ -59,37 +59,61 @@ namespace Ryujinx.Graphics.Vulkan
             }
         }
 
-        private const long ShaderCompileHoldMs = 1000;
-
-        private static long _shaderCompileLastMs;
-        private static int _shaderCompileBurst;
+        private static readonly CompileBurst _shaderCompiles = new();
+        private static readonly CompileBurst _pipelineCompiles = new();
 
         /// <summary>
         /// Called for every program compiled while the game runs (not loaded from the disk cache).
-        /// Compiles come in bursts, so the count is how many the current burst has compiled so far.
         /// </summary>
-        internal static void NoteShaderCompiled()
-        {
-            long now = Environment.TickCount64;
-
-            if (now - Interlocked.Exchange(ref _shaderCompileLastMs, now) >= ShaderCompileHoldMs)
-            {
-                Interlocked.Exchange(ref _shaderCompileBurst, 1);
-            }
-            else
-            {
-                Interlocked.Increment(ref _shaderCompileBurst);
-            }
-        }
+        internal static void NoteShaderCompiled() => _shaderCompiles.Note();
 
         /// <summary>
-        /// Shader compilation count for the overlay, or 0 once no shader has been compiled for a
-        /// second. Held that long so a single compile stays on screen long enough to read.
+        /// Called for every Vulkan pipeline created, i.e. every pipeline cache miss: a new shader, or
+        /// a known shader drawn with render state it was not compiled for yet.
         /// </summary>
-        public static int RecentShaderCompiles =>
-            Environment.TickCount64 - Interlocked.Read(ref _shaderCompileLastMs) < ShaderCompileHoldMs
-                ? Volatile.Read(ref _shaderCompileBurst)
-                : 0;
+        internal static void NotePipelineCompiled() => _pipelineCompiles.Note();
+
+        /// <summary>Shaders compiled in the current burst, or 0 once none was compiled for a second.</summary>
+        public static int RecentShaderCompiles => _shaderCompiles.Recent;
+
+        /// <summary>Pipelines created in the current burst, or 0 once none was created for a second.</summary>
+        public static int RecentPipelineCompiles => _pipelineCompiles.Recent;
+
+        /// <summary>
+        /// Compiles come in bursts, so the count is how many the current burst has done so far. It is
+        /// held for a second after the last one so a single compile stays on screen long enough to
+        /// read. Compiles land from several threads; they are rare enough for a lock.
+        /// </summary>
+        private sealed class CompileBurst
+        {
+            private const long HoldMs = 1000;
+
+            private readonly object _lock = new();
+            private long _lastMs;
+            private int _count;
+
+            public void Note()
+            {
+                long now = Environment.TickCount64;
+
+                lock (_lock)
+                {
+                    _count = now - _lastMs >= HoldMs ? 1 : _count + 1;
+                    _lastMs = now;
+                }
+            }
+
+            public int Recent
+            {
+                get
+                {
+                    lock (_lock)
+                    {
+                        return Environment.TickCount64 - _lastMs < HoldMs ? _count : 0;
+                    }
+                }
+            }
+        }
 
         private static long _presentsInWindow;
         private static long _windowStartMs;

@@ -92,7 +92,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
             {
                 _armedLogged = true;
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"DLSS nettete: ARMEE (SHARPEN=1, niveau {Level}/100) - RCAS lineaire maison en pre-passe sur la sortie DLSS.");
+                    $"DLSS sharpening: ARMED (SHARPEN=1, level {Level}/100) - in-house linear RCAS pre-pass on the DLSS output.");
             }
 
             ReadOnlySpan<float> sharpening = [1.5f - (Level * 0.01f * 1.5f)];

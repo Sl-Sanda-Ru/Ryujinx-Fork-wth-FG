@@ -199,10 +199,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _mirLogMs = now;
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP mirrors: perimees={_mirStale} detours={_mirTried} trouves={_mirFound} " +
-                $"acceptes={_mirAccepted} refuses={_mirRefused} rien={_mirNone} " +
-                $"| dernier miroir choisi=stage{_mirSeatStage} cbuf{_mirSeatSlot} +0x{_mirSeatOffset:X3}" +
-                $"{(_mirrorsAb ? $" | cote={(_mirAbArmed ? "ARME" : "ETEINT")}" : "")}");
+                $"MVPP mirrors: stale={_mirStale} detours={_mirTried} found={_mirFound} " +
+                $"accepted={_mirAccepted} refused={_mirRefused} none={_mirNone} " +
+                $"| last mirror chosen=stage{_mirSeatStage} cbuf{_mirSeatSlot} +0x{_mirSeatOffset:X3}" +
+                $"{(_mirrorsAb ? $" | side={(_mirAbArmed ? "ARMED" : "OFF")}" : "")}");
 
             _mirStale = 0;
             _mirTried = 0;
@@ -271,12 +271,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private static readonly string[] _failNames =
         {
             "buffer absent",
-            "hors bornes",
-            "pas une camera",
-            "projection carree",
+            "out of bounds",
+            "not a camera",
+            "square projection",
             "aspect",
-            "position absurde",
-            "matrice a l'origine",
+            "absurd position",
+            "matrix at origin",
         };
 
         private static long _lastFailLogMs;
@@ -308,7 +308,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 if (total > 0)
                 {
                     var sb = new System.Text.StringBuilder();
-                    sb.Append($"MVPP read fails ({total} en 5s) : ");
+                    sb.Append($"MVPP read fails ({total} in 5s) : ");
 
                     for (int i = 0; i < FailReasons; i++)
                     {
@@ -639,29 +639,29 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _subLogMs = now;
 
             var sb = new System.Text.StringBuilder();
-            sb.Append($"MVPP SUBPROBE (seuil rot {_subProbe:0.###}) : {_subSuspects} intrusions adoptees");
+            sb.Append($"MVPP SUBPROBE (rot threshold {_subProbe:0.###}) : {_subSuspects} intrusions adopted");
 
             if (_subSuspects > 0)
             {
                 sb.Append($" (rot max {_subRotMax:0.#####}, distance {_subDistMin:0.#}-{_subDistMax:0.#} u)");
-                sb.Append($" | SECOURS DISPONIBLE {_subRescued}, AUCUN {_subNoAlt}");
+                sb.Append($" | FALLBACK AVAILABLE {_subRescued}, NONE {_subNoAlt}");
 
                 for (int i = 0; i < HistMax; i++)
                 {
                     if (_subByRank[i] > 0)
                     {
-                        sb.Append($" | rang {i}: {_subByRank[i]}");
+                        sb.Append($" | rank {i}: {_subByRank[i]}");
                     }
                 }
 
                 if (_subRescued > 0)
                 {
-                    sb.Append($" | distance max du secours {_subAltDistMax:0.#} u");
+                    sb.Append($" | max fallback distance {_subAltDistMax:0.#} u");
                 }
             }
 
-            sb.Append($" || temoin legitime : rot max {_okRotMax:0.#####}, distance max {_okDistMax:0.#} u");
-            sb.Append($" | {_histCount} adresses connues");
+            sb.Append($" || legitimate control: max rot {_okRotMax:0.#####}, max distance {_okDistMax:0.#} u");
+            sb.Append($" | {_histCount} known addresses");
 
             Logger.Info?.Print(LogClass.Gpu, sb.ToString());
 
@@ -738,25 +738,25 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         public static string AltSummaryAndReset()
         {
             var sb = new System.Text.StringBuilder();
-            sb.Append($"MVPP ALT: camera retrouvee a une adresse deja connue {_altFound} fois, " +
-                      $"introuvable partout {_altNone} fois");
+            sb.Append($"MVPP ALT: camera found again at an already known address {_altFound} times, " +
+                      $"not found anywhere {_altNone} times");
 
             for (int i = 0; i < HistMax; i++)
             {
                 if (_altByRank[i] > 0)
                 {
-                    sb.Append($" | rang {i}: {_altByRank[i]}");
+                    sb.Append($" | rank {i}: {_altByRank[i]}");
                 }
 
                 _altByRank[i] = 0;
             }
 
-            sb.Append($" | {_histCount} adresses connues");
-            sb.Append($" | distance a la derniere camera retenue : <1u {_altDist[0]}, 1-10u {_altDist[1]}, " +
+            sb.Append($" | {_histCount} known addresses");
+            sb.Append($" | distance to last accepted camera: <1u {_altDist[0]}, 1-10u {_altDist[1]}, " +
                       $"10-100u {_altDist[2]}, >100u {_altDist[3]}, max {_altDistMax:0.##}");
-            sb.Append($" | valeur nouvelle {_altNew}, identique {_altSame}");
-            sb.Append($" | MULTIADDR {(_multiAddr ? $"arme : {_multiTaken} lectures recuperees, {_multiBack} refusees car en arriere" + (_multiMaxRot > 0f ? $", {_multiFar} refusees car AUTRE CAMERA (rot >= {_multiMaxRot:0.###})" : "") : "coupe")}");
-            sb.Append($" | ELECTROT {(_electRot > 0f ? $"seuil {_electRot:0.###} : {_electRejected} lectures refusees (autre camera), {_electForced} acceptees de force" : "coupe")}");
+            sb.Append($" | new value {_altNew}, identical {_altSame}");
+            sb.Append($" | MULTIADDR {(_multiAddr ? $"armed: {_multiTaken} reads recovered, {_multiBack} refused as going backwards" + (_multiMaxRot > 0f ? $", {_multiFar} refused as OTHER CAMERA (rot >= {_multiMaxRot:0.###})" : "") : "off")}");
+            sb.Append($" | ELECTROT {(_electRot > 0f ? $"threshold {_electRot:0.###} : {_electRejected} reads refused (other camera), {_electForced} force-accepted" : "off")}");
             _electRejected = 0;
             _electForced = 0;
 
@@ -850,16 +850,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _jitLogMs = now;
 
             var sb = new System.Text.StringBuilder();
-            sb.Append($"MVPP JITPROBE: decalage du JEU x=[{_jitMinX:0.0000};{_jitMaxX:0.0000}] px ");
-            sb.Append($"y=[{_jitMinY:0.0000};{_jitMaxY:0.0000}] px sur {_jitN} lectures ");
-            sb.Append($"| valeurs distinctes en x = {_jitSeenN}{(_jitSeenN >= _jitSeenX.Length ? "+" : "")} : ");
+            sb.Append($"MVPP JITPROBE: GAME jitter offset x=[{_jitMinX:0.0000};{_jitMaxX:0.0000}] px ");
+            sb.Append($"y=[{_jitMinY:0.0000};{_jitMaxY:0.0000}] px over {_jitN} reads ");
+            sb.Append($"| distinct values in x = {_jitSeenN}{(_jitSeenN >= _jitSeenX.Length ? "+" : "")} : ");
 
             for (int i = 0; i < _jitSeenN && i < 10; i++)
             {
                 sb.Append($"{_jitSeenX[i]:0.000} ");
             }
 
-            sb.Append($"| rendu {_mainWidth}x{_mainHeight}");
+            sb.Append($"| render {_mainWidth}x{_mainHeight}");
 
             Logger.Info?.Print(LogClass.Gpu, sb.ToString());
 
@@ -1002,7 +1002,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             {
                 _armWitnessLogged = true;
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP solo: ARME (VPSOLO=1) — rotation-comme-mouvement {(_rotMotion ? "ON (x" + RotMotionScale + ")" : "OFF")}.");
+                    $"MVPP solo: ARMED (VPSOLO=1) — rotation-as-motion {(_rotMotion ? "ON (x" + RotMotionScale + ")" : "OFF")}.");
             }
 
             if (width == height || height <= 0)
@@ -1057,7 +1057,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                             _mirAbArmed = mirArmed;
 
                             Logger.Info?.Print(LogClass.Gpu,
-                                $"MVPP mirrors AB: cote={(mirArmed ? "ARME" : "ETEINT")} (tranches de {MirrorsAbSliceMs / 1000} s).");
+                                $"MVPP mirrors AB: side={(mirArmed ? "ARMED" : "OFF")} (slices of {MirrorsAbSliceMs / 1000} s).");
                         }
                     }
 
@@ -1164,7 +1164,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         _hystAbArmed = armed;
 
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP elect-hyst AB: cote={(armed ? "ARME" : "ETEINT")} (tranches de {HystAbSliceMs / 1000} s).");
+                            $"MVPP elect-hyst AB: side={(armed ? "ARMED" : "OFF")} (slices of {HystAbSliceMs / 1000} s).");
                     }
                 }
 
@@ -1191,9 +1191,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         _hystLogMs = now;
 
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP elect-hyst: bloquees={_hystBlocked} ouvertes-siege-mort={_hystExpired} " +
-                            $"ouvertes-famine={_hystStarved} | siege vu vivant il y a {now - _lastSeatOkMs} ms, " +
-                            $"derniere acceptation il y a {now - _lastAcceptMs} ms.");
+                            $"MVPP elect-hyst: blocked={_hystBlocked} opened-seat-dead={_hystExpired} " +
+                            $"opened-starved={_hystStarved} | seat last seen alive {now - _lastSeatOkMs} ms ago, " +
+                            $"last acceptance {now - _lastAcceptMs} ms ago.");
 
                         _hystBlocked = 0;
                         _hystExpired = 0;
@@ -1236,9 +1236,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 }
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP election read: pas={epStep:0.##} u, ecartRot={epRot:0.####}, " +
-                    $"age de la reference {Environment.TickCount64 - _lastAcceptMs} ms" +
-                    $"{(epWarp ? $" -> RESET demande (camera-warp #{GAL.DlssCameraState.TeleportSeq})" : "")}.");
+                    $"MVPP election read: step={epStep:0.##} u, rotDelta={epRot:0.####}, " +
+                    $"reference age {Environment.TickCount64 - _lastAcceptMs} ms" +
+                    $"{(epWarp ? $" -> RESET requested (camera-warp #{GAL.DlssCameraState.TeleportSeq})" : "")}.");
             }
 
             return true;
@@ -1326,7 +1326,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     Logger.Info?.Print(LogClass.Gpu,
                         $"MVPP solo camera: reading stage{_elStage} cbuf{_elSlot} +0x{_elOffset:X3}" +
                         $"{(_elTransposed ? "^T" : "")}, {_reads} reads, {_readFails} misses, {_elections} elections, " +
-                        $"CAMGUARD {(_camGuard ? "ARME" : "mesure seule")}: {_guardRejects} lectures etrangeres sur {_reads} " +
+                        $"CAMGUARD {(_camGuard ? "ARMED" : "measure only")}: {_guardRejects} foreign reads out of {_reads} " +
                         $"({(_reads > 0 ? 100f * _guardRejects / _reads : 0f):0.##} %).");
                     _reads = 0;
                     _readFails = 0;
@@ -1498,7 +1498,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             {
                 _rotArmedLogged = true;
                 Logger.Info?.Print(LogClass.Gpu,
-                    "MVPP solo: rotation-comme-mouvement arme (VPSOLO_ROT, echelle x" + RotMotionScale + ").");
+                    "MVPP solo: rotation-as-motion armed (VPSOLO_ROT, scale x" + RotMotionScale + ").");
             }
 
             _candCount = 0;
@@ -1670,9 +1670,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         grille = true;
 
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP ELECTMAXSTEP: emplacement GRILLE -- stage{a.Stage} cbuf{a.Slot} " +
-                            $"+0x{a.Offset:X3} motion={a.Motion:0.##} > seuil {ElectMaxStep:0.##} " +
-                            $"(il ne pourra plus etre elu de la session ; {_electBannedCount} grille(s)).");
+                            $"MVPP ELECTMAXSTEP: location BANNED -- stage{a.Stage} cbuf{a.Slot} " +
+                            $"+0x{a.Offset:X3} motion={a.Motion:0.##} > threshold {ElectMaxStep:0.##} " +
+                            $"(it can no longer be elected this session; {_electBannedCount} banned).");
                     }
 
                     if (abberantMaintenant || grille)
@@ -1682,8 +1682,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         if ((_electMaxStepRejected % 20000) == 0)
                         {
                             Logger.Info?.Print(LogClass.Gpu,
-                                $"MVPP ELECTMAXSTEP: {_electMaxStepRejected} ecartements cumules, " +
-                                $"{_electBannedCount} emplacement(s) grille(s).");
+                                $"MVPP ELECTMAXSTEP: {_electMaxStepRejected} rejections in total, " +
+                                $"{_electBannedCount} location(s) banned.");
                         }
 
                         continue;
@@ -1965,15 +1965,15 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             }
 
             Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                $"CAPTIME-AB [{(side == 1 ? "ARME " : "ETEINT")}] presents={f} " +
+                $"CAPTIME-AB [{(side == 1 ? "ARMED" : "OFF  ")}] presents={f} " +
                 $"capture={(f > 0 ? 100f * _abCaptures[side] / f : 0f):0.#} % " +
-                $"sansCapture={f - _abCaptures[side]} " +
-                $"deplacee={(f > 0 ? 100f * _abMoved[side] / f : 0f):0.#} % " +
-                $"dessinsMoyens={(f > 0 ? (float)_abPreSum[side] / f : 0f):0.#} " +
+                $"noCapture={f - _abCaptures[side]} " +
+                $"moved={(f > 0 ? 100f * _abMoved[side] / f : 0f):0.#} % " +
+                $"avgDraws={(f > 0 ? (float)_abPreSum[side] / f : 0f):0.#} " +
                 $"A={_abA[side]} B={_abB[side]} " +
-                $"tauxA={(_abA[side] + _abB[side] > 0 ? 100f * _abA[side] / (_abA[side] + _abB[side]) : 0f):0.#} % " +
+                $"rateA={(_abA[side] + _abB[side] > 0 ? 100f * _abA[side] / (_abA[side] + _abB[side]) : 0f):0.#} % " +
                 $"transitions={_abTrans[side]} " +
-                $"echecs+={fails - _abFailAtSwitch[side]}");
+                $"fails+={fails - _abFailAtSwitch[side]}");
 
             _abFailAtSwitch[side] = fails;
             _abFrames[side] = 0;
@@ -2077,12 +2077,12 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             _whyLogMs = Environment.TickCount64;
 
             Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                $"CAPTIME-WHY appels={_whyCalled} (eteint={_whyOff} arme={_whyArmedCall}) " +
-                $"| sansElection={_whyNoElection} sansReference={_whyNoRef} " +
-                $"slotNonLie={_whyUnbound} lisible={_whyReadable} " +
-                $"formeInvalide={_whyBadShape} valeurDifferente={_whyDiffers} " +
-                $"borne={_whyDeadline} filet={_whyNetted} " +
-                $"ARME={_whyArmed} | K={_ctMaxSkip} elu=stage{_elStage} cbuf{_elSlot} +0x{_elOffset:X3} " +
+                $"CAPTIME-WHY calls={_whyCalled} (off={_whyOff} armed={_whyArmedCall}) " +
+                $"| noElection={_whyNoElection} noReference={_whyNoRef} " +
+                $"slotUnbound={_whyUnbound} readable={_whyReadable} " +
+                $"badShape={_whyBadShape} valueDiffers={_whyDiffers} " +
+                $"deadline={_whyDeadline} net={_whyNetted} " +
+                $"ARMED={_whyArmed} | K={_ctMaxSkip} elected=stage{_elStage} cbuf{_elSlot} +0x{_elOffset:X3} " +
                 $"transpose={(_elTransposed ? 1 : 0)}");
 
             _whyCalled = 0;
@@ -2192,16 +2192,16 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _abPreSum[side] += _ctPreDraw;
                 }
 
-                string verdict = seenAt >= 0 ? "A (deja vue -> capture trop tot)"
-                    : _ctBound > 0 ? "B (jamais vue -> le jeu ne l'avait pas produite)"
-                    : "ECARTE (couverture nulle)";
+                string verdict = seenAt >= 0 ? "A (already seen -> capture too early)"
+                    : _ctBound > 0 ? "B (never seen -> the game had not produced it)"
+                    : "DISCARDED (zero coverage)";
 
                 if (_abBlock == 0)
                 {
                     Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                        $"CAPTIME frame={_ctFrameId} verdict={verdict} vueAuDessin={seenAt} " +
-                        $"distinctes={_ctCount} slotLie={_ctBound} slotAbsent={_ctMissing} " +
-                        $"dessinsApresCapture={_ctDraw}");
+                        $"CAPTIME frame={_ctFrameId} verdict={verdict} seenAtDraw={seenAt} " +
+                        $"distinct={_ctCount} slotBound={_ctBound} slotMissing={_ctMissing} " +
+                        $"drawsAfterCapture={_ctDraw}");
                 }
             }
 
@@ -2220,10 +2220,10 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _ctMovedLogMs = Environment.TickCount64;
 
                     Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                        $"CAPTIME-FIX: capture deplacee sur {_ctMovedFrames}/{_ctTotalFrames} images " +
+                        $"CAPTIME-FIX: capture moved on {_ctMovedFrames}/{_ctTotalFrames} frames " +
                         $"({(_ctTotalFrames > 0 ? 100f * _ctMovedFrames / _ctTotalFrames : 0f):0.#} %), " +
-                        $"dessins laisses passer: moyenne {(_ctTotalFrames > 0 ? (float)_ctPreDrawSum / _ctTotalFrames : 0f):0.#}, " +
-                        $"dernier {_ctPreDraw}.");
+                        $"draws let through: mean {(_ctTotalFrames > 0 ? (float)_ctPreDrawSum / _ctTotalFrames : 0f):0.#}, " +
+                        $"last {_ctPreDraw}.");
 
                     _ctMovedFrames = 0;
                     _ctTotalFrames = 0;
@@ -2275,11 +2275,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _rkLogMs = rkNow;
 
                     Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                        $"MVPP rang-arrivee: images={_rkFrames} | <=40:{_rkBuckets[0]} 41-60:{_rkBuckets[1]} " +
+                        $"MVPP arrival-rank: frames={_rkFrames} | <=40:{_rkBuckets[0]} 41-60:{_rkBuckets[1]} " +
                         $"61-80:{_rkBuckets[2]} 81-120:{_rkBuckets[3]} 121-160:{_rkBuckets[4]} >160:{_rkBuckets[5]} " +
-                        $"| JAMAIS:{_rkNever} ecartees:{_rkNoCover} saturees:{_rkSaturated} " +
-                        $"| dessins-scannes moyen={(_rkFrames > 0 ? (float)_rkDrawSum / _rkFrames : 0f):0.#} " +
-                        $"| elu=stage{_elStage} cbuf{_elSlot} +0x{_elOffset:X3}");
+                        $"| NEVER:{_rkNever} discarded:{_rkNoCover} saturated:{_rkSaturated} " +
+                        $"| mean draws-scanned={(_rkFrames > 0 ? (float)_rkDrawSum / _rkFrames : 0f):0.#} " +
+                        $"| elected=stage{_elStage} cbuf{_elSlot} +0x{_elOffset:X3}");
 
                     Array.Clear(_rkBuckets);
                     _rkNever = 0;
@@ -2403,7 +2403,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             if (_lastFx > 1e-6f && MathF.Abs(fx / _lastFx - 1f) > MaxFocalDrift)
             {
-                LogReject("focale", dist, budget, fx, dtSec);
+                LogReject("focal", dist, budget, fx, dtSec);
 
                 return false;
             }
@@ -2481,13 +2481,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _lastSnapLogMs = snapNow;
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP snapguard: {_snapRefusals} lectures refusees (saut > {scale * SnapFactor:0.##}), " +
-                        $"derniere = {step:0.##} depuis [{_lastPx:0.#} {_lastPy:0.#} {_lastPz:0.#}]" +
-                        $" | plafond {confirm}, adoptions-forcees {_snapForced}, salve-max {_snapStreakMax}" +
-                        $", echelle {scale:0.###} sur {_accCount} pas appris" +
-                        $"{(_snapFloor > 0f ? $" | SNAPFLOOR {_snapFloor:0.###} (barre plancher {_snapFloor * SnapFactor:0.#} u) : {_snapFloorUsed} fois en vigueur" : "")}" +
-                        $"{(scale <= 0f ? "  <-- BARRE A ZERO : le garde refuse tout" : "")}" +
-                        $"{(_snapHold > 0 && _snapStreakMax >= confirm ? "  <-- COLLE AU PLAFOND : trop bas" : "")}.");
+                        $"MVPP snapguard: {_snapRefusals} reads refused (jump > {scale * SnapFactor:0.##}), " +
+                        $"last = {step:0.##} from [{_lastPx:0.#} {_lastPy:0.#} {_lastPz:0.#}]" +
+                        $" | cap {confirm}, forced-adoptions {_snapForced}, max-streak {_snapStreakMax}" +
+                        $", scale {scale:0.###} over {_accCount} learned steps" +
+                        $"{(_snapFloor > 0f ? $" | SNAPFLOOR {_snapFloor:0.###} (floor bar {_snapFloor * SnapFactor:0.#} u) : {_snapFloorUsed} times in effect" : "")}" +
+                        $"{(scale <= 0f ? "  <-- BAR AT ZERO: the guard refuses everything" : "")}" +
+                        $"{(_snapHold > 0 && _snapStreakMax >= confirm ? "  <-- STUCK AT CAP: too low" : "")}.");
                     _snapRefusals = 0;
                     _snapForced = 0;
                     _snapStreakMax = 0;

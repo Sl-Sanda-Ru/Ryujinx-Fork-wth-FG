@@ -1103,7 +1103,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
         private static void DumpWords(IVirtualMemoryManager mem, string quoi, ulong centre, int de, int a, ulong pc, ulong va)
         {
             System.Text.StringBuilder sb = new();
-            sb.Append($"FAULTPROBE {quoi}=0x{centre:X16} pc=0x{pc:X16} va=0x{va:X16} mots:");
+            sb.Append($"FAULTPROBE {quoi}=0x{centre:X16} pc=0x{pc:X16} va=0x{va:X16} words:");
 
             for (int k = de; k <= a; k++)
             {
@@ -1193,17 +1193,17 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                                 ulong bas = thread.Context.GetX(reg);
 
                                 Logger.Error?.Print(LogClass.Cpu,
-                                    $"FAULTCLE source X{reg}=0x{bas:X16} decalage +0x{dep:X}");
+                                    $"FAULTCLE source X{reg}=0x{bas:X16} offset +0x{dep:X}");
 
                                 try
                                 {
                                     ulong cle = mem.Read<ulong>(bas + dep);
 
-                                    Logger.Error?.Print(LogClass.Cpu, $"FAULTCLE valeur = 0x{cle:X16}");
+                                    Logger.Error?.Print(LogClass.Cpu, $"FAULTCLE value = 0x{cle:X16}");
 
                                     if (cle > 0x1000)
                                     {
-                                        DumpTexte(mem, "cle", cle, 96);
+                                        DumpTexte(mem, "key", cle, 96);
 
                                         ulong vtable = mem.Read<ulong>(cle);
 
@@ -1219,7 +1219,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                                                     if (nom > 0x1000)
                                                     {
-                                                        DumpTexte(mem, "CLASSE", nom, 64);
+                                                        DumpTexte(mem, "CLASS", nom, 64);
                                                     }
                                                 }
                                             }
@@ -1236,7 +1236,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
 
                                                 if (p > 0x1000)
                                                 {
-                                                    DumpTexte(mem, $"cle-champ{champ}", p, 48);
+                                                    DumpTexte(mem, $"key-field{champ}", p, 48);
                                                 }
                                             }
                                             catch
@@ -1247,13 +1247,13 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logger.Error?.Print(LogClass.Cpu, $"FAULTCLE illisible : {ex.Message}");
+                                    Logger.Error?.Print(LogClass.Cpu, $"FAULTCLE unreadable: {ex.Message}");
                                 }
                             }
                             else
                             {
                                 Logger.Error?.Print(LogClass.Cpu,
-                                    $"FAULTCLE mal forme : {_faultCle} (attendu <reg>:<offset hex>, ex. 23:10)");
+                                    $"FAULTCLE malformed: {_faultCle} (expected <reg>:<hex offset>, e.g. 23:10)");
                             }
                         }
 
@@ -1307,7 +1307,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                                 }
 
                                 trouves++;
-                                DumpWords(mem, $"RETOUR@sp+0x{k * 8:X2} 0x{val:X}", val, -10, 1, pc, va);
+                                DumpWords(mem, $"RETURN@sp+0x{k * 8:X2} 0x{val:X}", val, -10, 1, pc, va);
                             }
                         }
 
@@ -1336,7 +1336,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                                     continue;
                                 }
 
-                                DumpWords(mem, $"RELAIS X{r} vtbl=0x{vtable:X} +0x2E0", methode, 0, 7, pc, va);
+                                DumpWords(mem, $"RELAY X{r} vtbl=0x{vtable:X} +0x2E0", methode, 0, 7, pc, va);
                             }
                             catch
                             {
@@ -1373,7 +1373,7 @@ namespace Ryujinx.HLE.HOS.Kernel.Process
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error?.Print(LogClass.Cpu, $"FAULTPROBE indisponible : {ex.Message}");
+                    Logger.Error?.Print(LogClass.Cpu, $"FAULTPROBE unavailable: {ex.Message}");
                 }
             }
 

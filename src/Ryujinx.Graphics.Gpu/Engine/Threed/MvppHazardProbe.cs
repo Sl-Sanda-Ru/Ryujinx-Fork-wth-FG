@@ -107,18 +107,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             if (_hits.Count == 0)
             {
-                sb.Append(" -- AUCUN (mecanisme ecarte pour cette fenetre).");
+                sb.Append(" -- NONE (mechanism ruled out for this window).");
             }
             else
             {
-                sb.Append($", {_hits.Count} textures distinctes:");
+                sb.Append($", {_hits.Count} distinct textures:");
                 int shown = 0;
 
                 foreach (KeyValuePair<string, int> kv in _hits)
                 {
                     if (shown++ >= 6)
                     {
-                        sb.Append($" (+{_hits.Count - 6} autres)");
+                        sb.Append($" (+{_hits.Count - 6} others)");
 
                         break;
                     }

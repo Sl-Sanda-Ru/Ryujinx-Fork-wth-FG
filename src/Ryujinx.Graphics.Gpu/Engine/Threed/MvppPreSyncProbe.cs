@@ -76,7 +76,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     host.Get().ToArray());
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP PRESYNC GUEST shot {_guestShots}: memoire invitee {guest.Length} octets + texture hote, " +
+                    $"MVPP PRESYNC GUEST shot {_guestShots}: guest memory {guest.Length} bytes + host texture, " +
                     $"{gi.Width}x{gi.Height} lin={gi.IsLinear} gobY={gi.GobBlocksInY} stride={gi.Stride} {gi.FormatInfo.Format} -> {dir}");
 
                 _guestShots++;
@@ -85,7 +85,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESYNC GUEST: desactive apres erreur: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESYNC GUEST: disabled after error: {e.Message}");
             }
         }
 
@@ -102,8 +102,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     _announced = true;
                     Logger.Info?.Print(LogClass.Gpu,
-                        "MVPP PRESYNC: ON -- APPUIE SUR F10 quand tu VOIS l'artefact. Capture l'image presentee " +
-                        "AVANT et APRES la resynchronisation, pour voir si c'est ELLE qui la detruit.");
+                        "MVPP PRESYNC: ON -- PRESS F10 when you SEE the artifact. Captures the presented frame " +
+                        "BEFORE and AFTER the resync, to see whether IT is what destroys it.");
                 }
 
                 _armedThisFrame = false;
@@ -127,7 +127,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESYNC: desactive apres erreur (before): {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESYNC: disabled after error (before): {e.Message}");
             }
         }
 
@@ -169,7 +169,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 double pct = after.Length > 0 ? 100.0 * diffBytes / after.Length : 0;
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP PRESYNC shot {_shot}: {tag} -- {(identical ? "IDENTIQUES (la resync ne touche rien)" : $"DIFFERENTS, {pct:F1}% des octets changes par la resync")} -> {dir}");
+                    $"MVPP PRESYNC shot {_shot}: {tag} -- {(identical ? "IDENTICAL (the resync changes nothing)" : $"DIFFERENT, {pct:F1}% of bytes changed by the resync")} -> {dir}");
 
                 _shot++;
                 _nextMs = Environment.TickCount64 + 2000;
@@ -178,7 +178,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESYNC: desactive apres erreur (after): {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESYNC: disabled after error (after): {e.Message}");
             }
         }
     }

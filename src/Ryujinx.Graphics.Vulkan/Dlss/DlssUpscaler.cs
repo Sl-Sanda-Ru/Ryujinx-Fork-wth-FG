@@ -781,8 +781,8 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                 {
                     _noSceneBypassing = bypass;
                     Logger.Info?.Print(LogClass.Gpu, bypass
-                        ? $"DLSS NOSCENE: aucune camera publiee depuis {_noSceneStreak} images -- DLSS mis de cote, image presentee telle quelle."
-                        : "DLSS NOSCENE: la scene est revenue -- DLSS reprend.");
+                        ? $"DLSS NOSCENE: no camera published for {_noSceneStreak} frames -- DLSS set aside, frame presented as is."
+                        : "DLSS NOSCENE: the scene is back -- DLSS resumes.");
                 }
 
                 if (bypass)
@@ -955,9 +955,9 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                     {
                     Logger.Info?.Print(LogClass.Gpu,
                         $"MVPP consumer: camera VP changed on {_mvppChanged}/{_mvppPresents} presents, A/B/A/B alternations {_mvppAlternated}, " +
-                        $"NO-CAM {_mvppNoCamPresents} presents (paire figee -> vecteur en retard ou cumule), " +
-                        $"paire actuelle curr@{_mvppVpCurrStamp} prev@{_mvppVpPrevStamp} (ecart {_mvppVpCurrStamp - _mvppVpPrevStamp}, doit valoir 1), " +
-                        $"ROT delta max={_mvppRotDeltaMax:0.######} moy={(_mvppRotDeltaN > 0 ? _mvppRotDeltaSum / _mvppRotDeltaN : 0):0.######} sur {_mvppRotDeltaN} changements, " +
+                        $"NO-CAM {_mvppNoCamPresents} presents (frozen pair -> late or accumulated vector), " +
+                        $"current pair curr@{_mvppVpCurrStamp} prev@{_mvppVpPrevStamp} (gap {_mvppVpCurrStamp - _mvppVpPrevStamp}, should be 1), " +
+                        $"ROT delta max={_mvppRotDeltaMax:0.######} avg={(_mvppRotDeltaN > 0 ? _mvppRotDeltaSum / _mvppRotDeltaN : 0):0.######} over {_mvppRotDeltaN} changes, " +
                         $"max element delta {_mvppDeltaMax:0.######} at m[{_mvppDeltaIdx / 4}][{_mvppDeltaIdx % 4}] (row-major).");
                     var top = new System.Text.StringBuilder();
                     for (int k = 0; k < _mvppJumpDistinct; k++)
@@ -967,12 +967,12 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
 
                     Logger.Info?.Print(LogClass.Gpu,
                         $"MVPP JUMPDIST: bins <0.01={_mvppJumpBins[0]} <0.1={_mvppJumpBins[1]} <0.5={_mvppJumpBins[2]} " +
-                        $"<1.0={_mvppJumpBins[3]} >=1.0={_mvppJumpBins[4]} | gros sauts distincts={_mvppJumpDistinct}" +
-                        (_mvppJumpOverflow > 0 ? $" (+{_mvppJumpOverflow} hors table)" : "") +
-                        $" : {(top.Length > 0 ? top.ToString().TrimEnd() : "aucun")}" +
+                        $"<1.0={_mvppJumpBins[3]} >=1.0={_mvppJumpBins[4]} | distinct large jumps={_mvppJumpDistinct}" +
+                        (_mvppJumpOverflow > 0 ? $" (+{_mvppJumpOverflow} outside table)" : "") +
+                        $" : {(top.Length > 0 ? top.ToString().TrimEnd() : "none")}" +
                         (_mvppCamSplit > 0f
-                            ? $" || CAMSPLIT seuil={_mvppCamSplit:0.###} plafond={_mvppCamSplitStreak} rejets={_mvppCamRejected} " +
-                              $"adoptions-forcees={_mvppCamForced} salve-max={_mvppCamStreakMax}"
+                            ? $" || CAMSPLIT threshold={_mvppCamSplit:0.###} cap={_mvppCamSplitStreak} rejects={_mvppCamRejected} " +
+                              $"forced-adoptions={_mvppCamForced} burst-max={_mvppCamStreakMax}"
                             : ""));
                     }
 
@@ -1152,12 +1152,12 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                         if (!sr_desarme)
                         {
                             Logger.Info?.Print(LogClass.Gpu, sousOptimal
-                                ? $"DLSS auto-res: rien a faire -- interne {input.Width}x{input.Height} sous " +
-                                  $"l'optimal {(int)targetH}px, mais on ne MONTE plus (l'echelle appartient au joueur ; " +
-                                  $"canari Ghostbusters 05/08 : la montee demandait 8x plus de pixels a un jeu en 480p)."
-                                : $"DLSS auto-res: rien a faire -- interne {input.Width}x{input.Height} deja au-dessus " +
-                                  $"de l'optimal {(int)targetH}px et sous la sortie {contentW}x{contentH} " +
-                                  $"(mieux que {DlssIntegration.Mode}, on ne degrade pas).");
+                                ? $"DLSS auto-res: nothing to do -- internal {input.Width}x{input.Height} below " +
+                                  $"the optimal {(int)targetH}px, but we no longer scale UP (the scale belongs to the player; " +
+                                  $"Ghostbusters canary 05/08: scaling up asked a 480p game for 8x more pixels)."
+                                : $"DLSS auto-res: nothing to do -- internal {input.Width}x{input.Height} already above " +
+                                  $"the optimal {(int)targetH}px and below the output {contentW}x{contentH} " +
+                                  $"(better than {DlssIntegration.Mode}, we do not downgrade).");
                         }
                         else
                         {
@@ -1276,7 +1276,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                 if (!_dupArmedLogged)
                 {
                     _dupArmedLogged = true;
-                    Logger.Info?.Print(LogClass.Gpu, "DLSS: anti-doublons ARME (DUPSKIP=1).");
+                    Logger.Info?.Print(LogClass.Gpu, "DLSS: duplicate skipping ARMED (DUPSKIP=1).");
                 }
 
                 long dupSeq = System.Threading.Interlocked.Read(ref GAL.DlssCameraState.RenderedFrameSeq);
@@ -1295,7 +1295,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                     {
                         _dupLogMs = nowDup;
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"DLSS anti-doublons: {_dupSkips} sauts / {_dupEvals} evaluates (fenetre ~5 s).");
+                            $"DLSS duplicate skipping: {_dupSkips} skips / {_dupEvals} evaluates (window ~5 s).");
                         _dupSkips = 0;
                         _dupEvals = 0;
                     }
@@ -1456,7 +1456,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                 {
                     _borderFixSkipLogged = true;
                     Logger.Warning?.Print(LogClass.Gpu,
-                        $"MVPP BORDERFIX: format {input.Info.Format} non couvert (rgba8 seulement), passe inerte.");
+                        $"MVPP BORDERFIX: format {input.Info.Format} not covered (rgba8 only), pass inert.");
                 }
             }
 
@@ -1545,7 +1545,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
             if (_mvppWarmup > 0 && mvppPairOk && _mvppWarmupCount == _mvppWarmup)
             {
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP WARMUP: {_mvppWarmup} images de camera stable ecoulees, la reprojection commence a ecrire.");
+                    $"MVPP WARMUP: {_mvppWarmup} frames of stable camera elapsed, reprojection starts writing.");
             }
 
             if (_mvppReprojMode > 0 && mvppPairOk && warmedUp && mvppDepth != null && _hasPrev)
@@ -1583,11 +1583,11 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                     _mvppHealthRunning = mvppRan;
 
                     Logger.Info?.Print(LogClass.Gpu, mvppRan
-                        ? "MV++ ACTIF : reprojection en cours (camera appariee, vecteurs livres a DLSS)."
-                        : "MV++ DECROCHE : " + (!mvppPairOk ? "camera non appariee (aucune passe scene detectee)"
-                            : mvppDepth == null ? "profondeur non appariee"
-                            : !_hasPrev ? "pas d'image precedente"
-                            : "passe refusee en interne") + " -- DLSS tourne sans nos vecteurs.");
+                        ? "MV++ ACTIVE: reprojection running (camera paired, vectors delivered to DLSS)."
+                        : "MV++ DROPPED: " + (!mvppPairOk ? "camera not paired (no scene pass detected)"
+                            : mvppDepth == null ? "depth not paired"
+                            : !_hasPrev ? "no previous frame"
+                            : "pass rejected internally") + " -- DLSS running without our vectors.");
                 }
             }
 
@@ -1598,13 +1598,13 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                 {
                     _mvppPauseLogMs = pauseNow;
                     _mvppPauseLoggedOnce = true;
-                    string pauseCause = !mvppPairOk ? "caméra non appariée (aucune passe scène détectée)"
-                        : mvppDepth == null ? "depth non appariée"
-                        : !_hasPrev ? "pas d'image précédente"
-                        : "passe refusée en interne";
+                    string pauseCause = !mvppPairOk ? "camera not paired (no scene pass detected)"
+                        : mvppDepth == null ? "depth not paired"
+                        : !_hasPrev ? "no previous frame"
+                        : "pass rejected internally";
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MV++ en pause : {pauseCause} " +
-                        $"(pairOk={(mvppPairOk ? 1 : 0)}, depth={(mvppDepth != null ? "ok" : "aucune")}, prev={(_hasPrev ? 1 : 0)}).");
+                        $"MV++ paused: {pauseCause} " +
+                        $"(pairOk={(mvppPairOk ? 1 : 0)}, depth={(mvppDepth != null ? "ok" : "none")}, prev={(_hasPrev ? 1 : 0)}).");
                 }
             }
 
@@ -1908,7 +1908,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                     }
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP dome quiet: projJump={vpProj:0.000} -> {2 * _mvppSkyCutCooldown}f. serie8={serie.ToString().TrimEnd()}");
+                        $"MVPP dome quiet: projJump={vpProj:0.000} -> {2 * _mvppSkyCutCooldown}f. series8={serie.ToString().TrimEnd()}");
                 }
                 else if (MvppDev.Enabled && _projQuietFrames > 0)
                 {
@@ -2021,16 +2021,16 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                     if (MvppDev.Enabled)
                     {
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP SKYDRIFT sonde: sky={s[1]} d1={100f * s[24] / s[1]:0.0}% skyFlow=({meanFX:0.0000},{meanFY:0.0000}) px/frame (signé) " +
-                            $"skyMV écrit=({s[20] / 1024f / s[1]:0.0000},{s[21] / 1024f / s[1]:0.0000}) px (x1024, cap 4) " +
-                            $"driftEMA=({_skyDriftEmaX:0.0000},{_skyDriftEmaY:0.0000}) driftVuShader={BitConverter.UInt32BitsToSingle(s[25]):0.0000}.");
+                            $"MVPP SKYDRIFT probe: sky={s[1]} d1={100f * s[24] / s[1]:0.0}% skyFlow=({meanFX:0.0000},{meanFY:0.0000}) px/frame (signed) " +
+                            $"skyMV written=({s[20] / 1024f / s[1]:0.0000},{s[21] / 1024f / s[1]:0.0000}) px (x1024, cap 4) " +
+                            $"driftEMA=({_skyDriftEmaX:0.0000},{_skyDriftEmaY:0.0000}) driftSeenByShader={BitConverter.UInt32BitsToSingle(s[25]):0.0000}.");
                     }
                 }
 
                 if (MvppDev.Enabled && s[1] > 0)
                 {
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP SKYCOH sonde: sky={s[1]} d2={s[26] / 16f / s[1]:0.0000} d16={s[27] / 16f / s[1]:0.0000} px.");
+                        $"MVPP SKYCOH probe: sky={s[1]} d2={s[26] / 16f / s[1]:0.0000} d16={s[27] / 16f / s[1]:0.0000} px.");
                 }
 
                 if (MvppDev.Enabled)
@@ -2071,7 +2071,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                         }
 
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP SKYGRID sonde: zones={zValid}/32 spreadX={zMaxX - zMinX:0.0000} spreadY={zMaxY - zMinY:0.0000} px |{rows}.");
+                            $"MVPP SKYGRID probe: zones={zValid}/32 spreadX={zMaxX - zMinX:0.0000} spreadY={zMaxY - zMinY:0.0000} px |{rows}.");
                     }
                 }
 
@@ -2118,7 +2118,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                     uint cN = s[233];
                     Logger.Info?.Print(LogClass.Gpu,
                         $"MVPP CHECKER: farBand={cN} split={100f * s[234] / cN:0.0}% diag={100f * s[235] / cN:0.0}% " +
-                        $"sky={100f * s[236] / cN:0.0}% (diag = signature damier stricte ; split seul = non concluant).");
+                        $"sky={100f * s[236] / cN:0.0}% (diag = strict checkerboard signature; split alone = inconclusive).");
                 }
 
                 if (_mvppDepthGuard && s[230] > 0 && s[0] > 0)
@@ -2165,7 +2165,7 @@ namespace Ryujinx.Graphics.Vulkan.Dlss
                 if (MvppDev.Enabled && _vpJumpN > 0)
                 {
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP VPJUMP sonde: frames={_vpJumpN} mean={_vpJumpSum / _vpJumpN:0.00000} max={_vpJumpMax:0.00000} " +
+                        $"MVPP VPJUMP probe: frames={_vpJumpN} mean={_vpJumpSum / _vpJumpN:0.00000} max={_vpJumpMax:0.00000} " +
                         $"projMean={_vpProjSum / _vpJumpN:0.00000} projMax={_vpProjMax:0.00000} rearms={_projRearms} zoomskip={_projZoomSkips}.");
                     _projRearms = 0;
                     _projZoomSkips = 0;

@@ -182,7 +182,7 @@ namespace Ryujinx.Graphics.GAL.Multithreading
                 _bufBatchEntries = new BufferSetDataBatchEntry[BufBatchMaxEntries];
                 _bufBatchArena = new byte[BufBatchArenaBytes];
                 Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                    $"[BUFBATCH] ARME (RYUJINX_BUFBATCH=1) - lots de SetBufferData (max {BufBatchMaxEntries} entrees / {BufBatchArenaBytes / 1024} Ko).");
+                    $"[BUFBATCH] ARMED (RYUJINX_BUFBATCH=1) - batching SetBufferData (max {BufBatchMaxEntries} entries / {BufBatchArenaBytes / 1024} KB).");
             }
 
             if (data.Length > BufBatchArenaBytes)

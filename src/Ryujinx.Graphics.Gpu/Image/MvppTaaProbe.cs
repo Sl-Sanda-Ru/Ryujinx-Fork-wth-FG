@@ -123,11 +123,11 @@ namespace Ryujinx.Graphics.Gpu.Image
             }
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"TAAPROBE PASSE TEMPORELLE #{_reportedN} (image {_frame}) : lit l'historique " +
+                $"TAAPROBE TEMPORAL PASS #{_reportedN} (frame {_frame}): reads history " +
                 $"{input.Info.FormatInfo.Format}/{input.Info.Width}x{input.Info.Height} " +
-                $"va=0x{Va(input):X} (ecrit a l'image {_lastSeen[ii]}) " +
-                $"-> ecrit {target.Info.FormatInfo.Format}/{target.Info.Width}x{target.Info.Height} " +
-                $"va=0x{tva:X} | etage {stage} | resolution principale {_mainW}x{_mainH}");
+                $"va=0x{Va(input):X} (written at frame {_lastSeen[ii]}) " +
+                $"-> writes {target.Info.FormatInfo.Format}/{target.Info.Width}x{target.Info.Height} " +
+                $"va=0x{tva:X} | stage {stage} | main resolution {_mainW}x{_mainH}");
         }
     }
 }

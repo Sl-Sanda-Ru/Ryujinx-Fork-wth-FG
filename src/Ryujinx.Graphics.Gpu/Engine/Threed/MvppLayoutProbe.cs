@@ -26,7 +26,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     _announced = true;
                     Logger.Info?.Print(LogClass.Gpu,
-                        "MVPP LAYOUT: ON -- demande (jeu) vs fourni (cache) pour la texture presentee, lecture seule.");
+                        "MVPP LAYOUT: ON -- requested (game) vs provided (cache) for the presented texture, read-only.");
                 }
 
                 Image.TextureInfo g = got.Info;
@@ -40,9 +40,9 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 bool any = linMismatch || gobMismatch || strideMismatch || dimMismatch || fmtMismatch;
 
                 string sig =
-                    $"DEMANDE {want.Width}x{want.Height} lin={want.IsLinear} gobY={want.GobBlocksInY} stride={want.Stride} {want.FormatInfo.Format} " +
-                    $"|| FOURNI {g.Width}x{g.Height} lin={g.IsLinear} gobY={g.GobBlocksInY} stride={g.Stride} {g.FormatInfo.Format}" +
-                    $"{(any ? "  <<< DESACCORD:" : "  (accord)")}" +
+                    $"REQUESTED {want.Width}x{want.Height} lin={want.IsLinear} gobY={want.GobBlocksInY} stride={want.Stride} {want.FormatInfo.Format} " +
+                    $"|| PROVIDED {g.Width}x{g.Height} lin={g.IsLinear} gobY={g.GobBlocksInY} stride={g.Stride} {g.FormatInfo.Format}" +
+                    $"{(any ? "  <<< MISMATCH:" : "  (match)")}" +
                     $"{(linMismatch ? " isLinear" : "")}{(gobMismatch ? " gobBlocksInY" : "")}{(strideMismatch ? " stride" : "")}" +
                     $"{(dimMismatch ? " dimensions" : "")}{(fmtMismatch ? " format" : "")}";
 
@@ -58,7 +58,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP LAYOUT: desactive apres erreur: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP LAYOUT: disabled after error: {e.Message}");
             }
         }
     }

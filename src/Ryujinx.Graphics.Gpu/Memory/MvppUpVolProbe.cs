@@ -45,7 +45,7 @@ namespace Ryujinx.Graphics.Gpu.Memory
             if (!_armedLogged)
             {
                 _armedLogged = true;
-                Logger.Info?.Print(LogClass.Gpu, "[UPVOL] ARME v2 (RYUJINX_UPVOL=1) - volume des uploads buffer par porte (0=complet, 1=region), fenetre ~5 s.");
+                Logger.Info?.Print(LogClass.Gpu, "[UPVOL] ARMED v2 (RYUJINX_UPVOL=1) - buffer upload volume per gate (0=full, 1=region), ~5 s window.");
             }
 
             long s = (long)size;
@@ -100,9 +100,9 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 long b3b = Interlocked.Exchange(ref _bucketBytes[3], 0);
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"[UPVOL ~5s] appels {calls} ({calls / sec:F0}/s), total {bytes / 1048576.0:F1} Mo ({bytes / 1048576.0 / sec:F1} Mo/s), max {max / 1024} Ko | " +
-                    $"COMPLET: {s0c} ({s0b / 1048576.0:F1} Mo) | REGION: {s1c} ({s1b / 1048576.0:F1} Mo) | " +
-                    $"<4K: {b0c} ({b0b / 1024} Ko) | 4-64K: {b1c} ({b1b / 1048576.0:F1} Mo) | 64K-1M: {b2c} ({b2b / 1048576.0:F1} Mo) | >=1M: {b3c} ({b3b / 1048576.0:F1} Mo)");
+                    $"[UPVOL ~5s] calls {calls} ({calls / sec:F0}/s), total {bytes / 1048576.0:F1} MB ({bytes / 1048576.0 / sec:F1} MB/s), max {max / 1024} KB | " +
+                    $"FULL: {s0c} ({s0b / 1048576.0:F1} MB) | REGION: {s1c} ({s1b / 1048576.0:F1} MB) | " +
+                    $"<4K: {b0c} ({b0b / 1024} KB) | 4-64K: {b1c} ({b1b / 1048576.0:F1} MB) | 64K-1M: {b2c} ({b2b / 1048576.0:F1} MB) | >=1M: {b3c} ({b3b / 1048576.0:F1} MB)");
 
                 RunMirrorBench();
             }
@@ -147,11 +147,11 @@ namespace Ryujinx.Graphics.Gpu.Memory
                 double managedMBs = sz / ((t4 - t3) / freq) / 1048576.0;
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"[MIRBENCH] {sz / 1024} Ko @0x{benchAddr:X}: miroir FROID {mirrorColdMBs:F0} Mo/s, chaud {mirrorWarmMBs:F0} Mo/s, gere {managedMBs:F0} Mo/s (gere/froid {managedMBs / Math.Max(1, mirrorColdMBs):F1}x)");
+                    $"[MIRBENCH] {sz / 1024} KB @0x{benchAddr:X}: mirror COLD {mirrorColdMBs:F0} MB/s, warm {mirrorWarmMBs:F0} MB/s, managed {managedMBs:F0} MB/s (managed/cold {managedMBs / Math.Max(1, mirrorColdMBs):F1}x)");
             }
             catch (Exception e)
             {
-                Logger.Warning?.Print(LogClass.Gpu, $"[MIRBENCH] echec lecture @0x{benchAddr:X}+{sz}: {e.Message} (banc ignore cette fenetre)");
+                Logger.Warning?.Print(LogClass.Gpu, $"[MIRBENCH] read failed @0x{benchAddr:X}+{sz}: {e.Message} (bench skipped for this window)");
             }
         }
     }

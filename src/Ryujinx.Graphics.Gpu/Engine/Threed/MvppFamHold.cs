@@ -97,8 +97,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     if (_wLogMs != 0 && (_wHolds > 0 || _wSupprimees > 0))
                     {
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP famhold fenetre: holds={_wHolds} frais-ailleurs={_wFrais} " +
-                            $"rien={_wRien} sans-verif={_wSansVerif} supprimees={_wSupprimees} | " +
+                            $"MVPP famhold window: holds={_wHolds} fresh-elsewhere={_wFrais} " +
+                            $"none={_wRien} unverified={_wSansVerif} suppressed={_wSupprimees} | " +
                             $"{_familles[0].Nom}={_wParFamille[0]} {_familles[1].Nom}={_wParFamille[1]} " +
                             $"{_familles[2].Nom}={_wParFamille[2]} {_familles[3].Nom}={_wParFamille[3]} " +
                             $"{_familles[4].Nom}={_wParFamille[4]}");
@@ -143,7 +143,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             if (verifies == 0)
             {
                 _wSansVerif++;
-                ligne = $"MVPP famhold: HOLD verifies=0/{_familles.Length} (aucune famille lisible cette image)";
+                ligne = $"MVPP famhold: HOLD verified=0/{_familles.Length} (no readable family this frame)";
             }
             else if (fraisIdx >= 0)
             {
@@ -156,13 +156,13 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     dist = (pf - pp).Length().ToString("0.##");
                 }
 
-                ligne = $"MVPP famhold: HOLD frais=oui famille={_familles[fraisIdx].Nom} " +
-                        $"dist={dist} verifies={verifies}/{_familles.Length}";
+                ligne = $"MVPP famhold: HOLD fresh=yes family={_familles[fraisIdx].Nom} " +
+                        $"dist={dist} verified={verifies}/{_familles.Length}";
             }
             else
             {
                 _wRien++;
-                ligne = $"MVPP famhold: HOLD frais=non verifies={verifies}/{_familles.Length}";
+                ligne = $"MVPP famhold: HOLD fresh=no verified={verifies}/{_familles.Length}";
             }
 
             long now = Environment.TickCount64;

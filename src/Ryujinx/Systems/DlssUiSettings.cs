@@ -250,7 +250,7 @@ namespace Ryujinx.Ava.Systems
                     }
                 }
 
-                Logger.Info?.Print(LogClass.Application, $"ENVDUMP ({moment}) : {vars.Count} variables RYUJINX_*");
+                Logger.Info?.Print(LogClass.Application, $"ENVDUMP ({moment}): {vars.Count} RYUJINX_* variables");
 
                 foreach (var kv in vars)
                 {
@@ -390,7 +390,7 @@ namespace Ryujinx.Ava.Systems
 
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RYUJINX_DLSS")))
             {
-                DumpEnvironment("lancement par bat, profil UI ignore");
+                DumpEnvironment("launched via .bat, UI profile ignored");
 
                 return;
             }
@@ -491,7 +491,7 @@ namespace Ryujinx.Ava.Systems
                 Environment.SetEnvironmentVariable("RYUJINX_DLSS_SHARPEN_LEVEL", sharpen.ToString(CultureInfo.InvariantCulture));
             }
 
-            DumpEnvironment("apres profil UI");
+            DumpEnvironment("after UI profile");
 
             Logger.Info?.Print(LogClass.Application,
                 $"DLSS UI profile applied: mode={_modeEnv[mode]}, fg={fgMultiplier}x, " +

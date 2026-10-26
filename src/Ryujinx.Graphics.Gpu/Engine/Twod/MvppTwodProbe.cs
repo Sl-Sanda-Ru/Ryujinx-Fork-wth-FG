@@ -35,7 +35,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
             _announced = true;
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP TWOD: {_blits} blits, {_negatives} hors bornes, {_resized} redimensionnes, {_shapes.Count} formes distinctes.");
+                $"MVPP TWOD: {_blits} blits, {_negatives} out of bounds, {_resized} resized, {_shapes.Count} distinct shapes.");
 
             int shown = 0;
 
@@ -71,7 +71,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
                 {
                     _announced = true;
                     Logger.Info?.Print(LogClass.Gpu,
-                        "MVPP TWOD: ON -- recensement des blits du moteur 2D, lecture seule, 1 ligne toutes les 2 s.");
+                        "MVPP TWOD: ON -- census of 2D engine blits, read-only, 1 line every 2 s.");
                 }
 
                 _blits++;
@@ -93,7 +93,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Twod
             catch (Exception e)
             {
                 _enabled = false;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP TWOD: desactive apres erreur: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP TWOD: disabled after error: {e.Message}");
             }
         }
     }

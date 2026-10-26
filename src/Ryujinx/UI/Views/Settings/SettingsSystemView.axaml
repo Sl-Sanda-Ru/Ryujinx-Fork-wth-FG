@@ -195,7 +195,7 @@
                                 Orientation="Horizontal">
                         <TextBlock
                             VerticalAlignment="Center"
-                            Text="Plafond VRR (FPS)"
+                            Text="VRR cap (FPS)"
                             Width="250" />
                         <ComboBox
                             SelectedIndex="{Binding VrrFpsCapIndex}"

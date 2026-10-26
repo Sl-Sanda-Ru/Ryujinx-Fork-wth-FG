@@ -474,8 +474,8 @@ namespace Ryujinx.Graphics.Gpu.Image
             if (GAL.MvppDev.Enabled)
             {
                 Ryujinx.Common.Logging.Logger.Info?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                    $"FORCEMIPS RT-DEMOTE: boost lâché (cible couleur) {storage.Info.Width}x{storage.Info.Height} " +
-                    $"{storage.Info.FormatInfo.Format} niveaux(hôte)={storage._forcedMipLevels}.");
+                    $"FORCEMIPS RT-DEMOTE: boost dropped (color target) {storage.Info.Width}x{storage.Info.Height} " +
+                    $"{storage.Info.FormatInfo.Format} levels(host)={storage._forcedMipLevels}.");
             }
 
             ITexture newStorage = storage.GetScaledHostTexture(storage.ScaleFactor, true);

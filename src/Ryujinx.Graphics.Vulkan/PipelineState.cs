@@ -369,6 +369,8 @@ namespace Ryujinx.Graphics.Vulkan
                 }
 
                 gd.Api.CreateComputePipelines(device, cache, 1, &pipelineCreateInfo, null, &pipelineHandle).ThrowOnError();
+
+                PerformanceOverlay.NotePipelineCompiled();
             }
 
             pipeline = new Auto<DisposablePipeline>(new DisposablePipeline(gd.Api, device, pipelineHandle));
@@ -688,6 +690,8 @@ namespace Ryujinx.Graphics.Vulkan
                 };
 
                 Result result = gd.Api.CreateGraphicsPipelines(device, cache, 1, &pipelineCreateInfo, null, &pipelineHandle);
+
+                PerformanceOverlay.NotePipelineCompiled();
 
                 if (nofragSanitized)
                 {

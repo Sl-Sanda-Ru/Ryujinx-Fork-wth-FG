@@ -47,9 +47,8 @@ namespace Ryujinx.Graphics.Vulkan
 
         private int _width;
         private int _height;
-        private int _requestedWidth;
-        private int _requestedHeight;
-        private int _sizeRecheckFrames;
+        private long _requestedSize;
+        private long _sizeRecheckUntilMs;
         private VSyncMode _vSyncMode;
         private bool _swapchainIsDirty;
         private VkFormat _format;
@@ -299,7 +298,7 @@ namespace Ryujinx.Graphics.Vulkan
             if (_presentCapArmed && !_presentCapUsable)
             {
                 Ryujinx.Common.Logging.Logger.Warning?.Print(Ryujinx.Common.Logging.LogClass.Gpu,
-                    "MVPP PRESENTCAP: TransferSrc non supporté par la surface, capture désarmée.");
+                    "MVPP PRESENTCAP: TransferSrc not supported by the surface, capture disarmed.");
             }
 
             SwapchainKHR oldSwapchain = _swapchain;
@@ -700,12 +699,12 @@ namespace Ryujinx.Graphics.Vulkan
                 if (!_fgFeedArmedLogged)
                 {
                     _fgFeedArmedLogged = true;
-                    Logger.Info?.Print(LogClass.Gpu, "DLSS FG-nourrie: ARMEE (FGFEED=1).");
+                    Logger.Info?.Print(LogClass.Gpu, "DLSS FG-feed: ARMED (FGFEED=1).");
 
                     if (!fgArmed)
                     {
                         Logger.Warning?.Print(LogClass.Gpu,
-                            "DLSS FG-nourrie: FG non armee (pas de proxy Streamline) -> avalage INERTE, presentation inchangee.");
+                            "DLSS FG-feed: FG not armed (no Streamline proxy) -> swallowing INERT, presentation unchanged.");
                     }
                 }
 
@@ -716,7 +715,7 @@ namespace Ryujinx.Graphics.Vulkan
                     if (_fgFeedLogMs != 0)
                     {
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"DLSS FG-nourrie: {_fgFeedSwallowed} doublons avales / {_fgFeedPresented} presentes (fenetre ~5 s).");
+                            $"DLSS FG-feed: {_fgFeedSwallowed} duplicates swallowed / {_fgFeedPresented} presented (window ~5 s).");
                     }
 
                     _fgFeedLogMs = fgFeedNow;
@@ -752,11 +751,15 @@ namespace Ryujinx.Graphics.Vulkan
             uint nextImage = 0;
             int semaphoreIndex = _frameIndex++ % _imageAvailableSemaphores.Length;
 
-            if (!_swapchainIsDirty && _sizeRecheckFrames > 0)
-            {
-                _sizeRecheckFrames--;
+            long sizeRecheckUntilMs = System.Threading.Interlocked.Read(ref _sizeRecheckUntilMs);
 
-                if (SurfaceExtentChanged())
+            if (!_swapchainIsDirty && sizeRecheckUntilMs != 0)
+            {
+                if (Environment.TickCount64 >= sizeRecheckUntilMs)
+                {
+                    System.Threading.Interlocked.CompareExchange(ref _sizeRecheckUntilMs, 0, sizeRecheckUntilMs);
+                }
+                else if (SurfaceExtentChanged(sizeRecheckUntilMs))
                 {
                     _swapchainIsDirty = true;
                 }
@@ -1126,9 +1129,9 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     _presentCapAnnounced = true;
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP PRESENTCAP: armed -- premiere rafale dans {_presentCapStartSec}s, " +
-                        $"{_presentCapBurst} images CONSECUTIVES par rafale, pause {_presentCapGapMs}ms, {_presentCapMax} au total. " +
-                        "Sois en jeu, l'artefact visible, avant la fin du compte a rebours.");
+                        $"MVPP PRESENTCAP: armed -- first burst in {_presentCapStartSec}s, " +
+                        $"{_presentCapBurst} CONSECUTIVE frames per burst, pause {_presentCapGapMs}ms, {_presentCapMax} in total. " +
+                        "Be in-game with the artifact visible before the countdown ends.");
                 }
 
                 bool presReady = presNowMs - _presentCapArmMs >= _presentCapStartSec * 1000L;
@@ -1201,7 +1204,7 @@ namespace Ryujinx.Graphics.Vulkan
                     }
                     catch (System.Exception presEx)
                     {
-                        Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESENTCAP ÉCHEC (copie): {presEx.Message}");
+                        Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESENTCAP FAILED (copy): {presEx.Message}");
                     }
                 }
             }
@@ -1261,7 +1264,7 @@ namespace Ryujinx.Graphics.Vulkan
                         string guestFile = System.IO.Path.Combine(presDir,
                             $"guest_{_presentCapCount:00}_{_presentCapGuestW}x{_presentCapGuestH}_{_presentCapGuestFmt}.bin");
                         System.IO.File.WriteAllBytes(guestFile, guestData.Get().ToArray());
-                        Logger.Info?.Print(LogClass.Gpu, $"MVPP PRESENTCAP paire: {guestFile}.");
+                        Logger.Info?.Print(LogClass.Gpu, $"MVPP PRESENTCAP pair: {guestFile}.");
                     }
 
                     _presentCapCount++;
@@ -1269,7 +1272,7 @@ namespace Ryujinx.Graphics.Vulkan
                 }
                 catch (System.Exception presEx)
                 {
-                    Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESENTCAP ÉCHEC (lecture): {presEx.Message}");
+                    Logger.Warning?.Print(LogClass.Gpu, $"MVPP PRESENTCAP FAILED (readback): {presEx.Message}");
                 }
             }
 
@@ -1285,7 +1288,7 @@ namespace Ryujinx.Graphics.Vulkan
                 {
                     _syncFrameAnnounced = true;
                     Logger.Info?.Print(LogClass.Gpu,
-                        "MVPP SYNCFRAME: ON -- DeviceWaitIdle après chaque present (banc uniquement, perte de FPS attendue).");
+                        "MVPP SYNCFRAME: ON -- DeviceWaitIdle after every present (bench only, FPS loss expected).");
                 }
 
                 long syncStart = System.Diagnostics.Stopwatch.GetTimestamp();
@@ -1314,14 +1317,14 @@ namespace Ryujinx.Graphics.Vulkan
                         double syncAvgMs =
                             (_syncFrameStallTicks * 1000.0 / System.Diagnostics.Stopwatch.Frequency) / _syncFrameCount;
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP SYNCFRAME: {_syncFrameCount} images synchronisées, stall moyen {syncAvgMs:F2} ms, fgProxy={_swapchainViaFgProxy}.");
+                            $"MVPP SYNCFRAME: {_syncFrameCount} frames synchronized, average stall {syncAvgMs:F2} ms, fgProxy={_swapchainViaFgProxy}.");
                     }
                 }
                 catch (System.Exception syncEx)
                 {
                     _syncFrameLive = false;
                     Logger.Warning?.Print(LogClass.Gpu,
-                        $"MVPP SYNCFRAME: désarmé après erreur inattendue -- {syncEx.Message}");
+                        $"MVPP SYNCFRAME: disarmed after unexpected error -- {syncEx.Message}");
                 }
             }
 
@@ -1367,7 +1370,9 @@ namespace Ryujinx.Graphics.Vulkan
                 }
             }
 
-            if (result == Result.ErrorOutOfDateKhr || result == Result.SuboptimalKhr)
+            // Suboptimal is left to the next acquire: some presenters report it on every frame
+            // (copy instead of flip), and recreating for it here would recreate every frame.
+            if (result == Result.ErrorOutOfDateKhr)
             {
                 _swapchainIsDirty = true;
             }
@@ -1665,18 +1670,22 @@ namespace Ryujinx.Graphics.Vulkan
             // The swapchain takes its size from the surface, but on a fullscreen toggle the window
             // can be resized after the swapchain was recreated, leaving it at the old size. The
             // frame generation proxies don't report that as out of date, so keep checking the
-            // surface for a while until it matches the requested size.
-            _requestedWidth = width;
-            _requestedHeight = height;
-            _sizeRecheckFrames = SizeRecheckFrameCount;
+            // surface for a while until it matches the requested size. Called from the UI thread.
+            System.Threading.Interlocked.Exchange(ref _requestedSize, ((long)(uint)width << 32) | (uint)height);
+            System.Threading.Interlocked.Exchange(ref _sizeRecheckUntilMs, Environment.TickCount64 + SizeRecheckMs);
             _swapchainIsDirty = true;
         }
 
-        private const int SizeRecheckFrameCount = 120;
+        private const long SizeRecheckMs = 2000;
 
-        private bool SurfaceExtentChanged()
+        private bool SurfaceExtentChanged(long sizeRecheckUntilMs)
         {
-            _gd.SurfaceApi.GetPhysicalDeviceSurfaceCapabilities(_physicalDevice, _surface, out SurfaceCapabilitiesKHR capabilities);
+            Result result = _gd.SurfaceApi.GetPhysicalDeviceSurfaceCapabilities(_physicalDevice, _surface, out SurfaceCapabilitiesKHR capabilities);
+
+            if (result != Result.Success)
+            {
+                return false;
+            }
 
             Extent2D extent = ChooseSwapExtent(capabilities);
 
@@ -1685,9 +1694,16 @@ namespace Ryujinx.Graphics.Vulkan
                 return false;
             }
 
-            if (extent.Width == (uint)_requestedWidth && extent.Height == (uint)_requestedHeight)
+            long requestedSize = System.Threading.Interlocked.Read(ref _requestedSize);
+            int requestedWidth = (int)(requestedSize >> 32);
+            int requestedHeight = (int)requestedSize;
+
+            // The requested size is the window size in DIPs times the DPI scale, truncated, so it can
+            // be a pixel short of the surface on fractional scales.
+            if (Math.Abs((int)extent.Width - requestedWidth) <= 1 && Math.Abs((int)extent.Height - requestedHeight) <= 1)
             {
-                _sizeRecheckFrames = Math.Min(_sizeRecheckFrames, 1);
+                // Only ends this recheck: a SetSize that started a new one in the meantime keeps it.
+                System.Threading.Interlocked.CompareExchange(ref _sizeRecheckUntilMs, 0, sizeRecheckUntilMs);
             }
 
             return extent.Width != (uint)_width || extent.Height != (uint)_height;

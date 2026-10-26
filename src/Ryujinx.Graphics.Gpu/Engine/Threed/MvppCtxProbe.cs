@@ -330,58 +330,58 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
         private static void Report()
         {
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP CTXPROBE : {_reads} lectures · {_intruders} INTRUSES (pas >= {IntruderDist:0} u " +
-                $"contre une reference FRAICHE) · {_staleJumps} gros sauts ecartes (reference perimee, " +
-                $"pas des intruses) · " +
-                $"passes qualifiantes par image : min {(_qualMin == int.MaxValue ? 0 : _qualMin)} / " +
-                $"max {_qualMax} / moyenne {(_frames > 0 ? (float)_qualSum / _frames : 0f):0.##} sur {_frames} images" +
-                $"{(_ctxOverflow > 0 ? $" · TABLE PLEINE, {_ctxOverflow} contextes non comptes" : "")}");
+                $"MVPP CTXPROBE : {_reads} reads · {_intruders} INTRUDERS (step >= {IntruderDist:0} u " +
+                $"against a FRESH reference) · {_staleJumps} large jumps discarded (stale reference, " +
+                $"not intruders) · " +
+                $"qualifying passes per frame: min {(_qualMin == int.MaxValue ? 0 : _qualMin)} / " +
+                $"max {_qualMax} / mean {(_frames > 0 ? (float)_qualSum / _frames : 0f):0.##} over {_frames} frames" +
+                $"{(_ctxOverflow > 0 ? $" · TABLE FULL, {_ctxOverflow} contexts not counted" : "")}");
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP CTXPROBE VERDICT PASSE HDR : {_frames} images 3D · " +
-                $"{_hdrFrames} avec une passe HDR ({(_frames > 0 ? 100f * _hdrFrames / _frames : 0f):0.#} %) · " +
-                $"camera LISIBLE sur {_hdrReadable} " +
-                $"({(_hdrFrames > 0 ? 100f * _hdrReadable / _hdrFrames : 0f):0.#} % de celles-la) · " +
-                $"illisible sur {_hdrUnreadable} · " +
-                $"intruses parmi les lisibles : {_hdrIntruders} " +
+                $"MVPP CTXPROBE VERDICT HDR PASS : {_frames} 3D frames · " +
+                $"{_hdrFrames} with an HDR pass ({(_frames > 0 ? 100f * _hdrFrames / _frames : 0f):0.#} %) · " +
+                $"camera READABLE on {_hdrReadable} " +
+                $"({(_hdrFrames > 0 ? 100f * _hdrReadable / _hdrFrames : 0f):0.#} % of those) · " +
+                $"unreadable on {_hdrUnreadable} · " +
+                $"intruders among the readable: {_hdrIntruders} " +
                 $"({(_hdrReadable > 0 ? 100f * _hdrIntruders / _hdrReadable : 0f):0.##} %)");
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP CTXPROBE AGE DE LA REFERENCE · saines : " +
-                $"{(_ageNClean > 0 ? (float)_ageSumClean / _ageNClean : 0f):0.#} ms de moyenne sur {_ageNClean} · " +
-                $"intruses : {(_ageNIntr > 0 ? (float)_ageSumIntr / _ageNIntr : 0f):0.#} ms sur {_ageNIntr} " +
+                $"MVPP CTXPROBE REFERENCE AGE · clean: " +
+                $"{(_ageNClean > 0 ? (float)_ageSumClean / _ageNClean : 0f):0.#} ms mean over {_ageNClean} · " +
+                $"intruders: {(_ageNIntr > 0 ? (float)_ageSumIntr / _ageNIntr : 0f):0.#} ms over {_ageNIntr} " +
                 $"(max {_ageMaxIntr} ms)");
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP CTXPROBE RANG · saines : moyenne " +
-                $"{(_rankNClean > 0 ? (float)_rankSumClean / _rankNClean : 0f):0.#} sur {_rankNClean} " +
-                $"[rang1 {Pct(_rankHistClean[0], _rankNClean)} · 2-3 {Pct(_rankHistClean[1], _rankNClean)} · " +
+                $"MVPP CTXPROBE RANK · clean: mean " +
+                $"{(_rankNClean > 0 ? (float)_rankSumClean / _rankNClean : 0f):0.#} over {_rankNClean} " +
+                $"[rank1 {Pct(_rankHistClean[0], _rankNClean)} · 2-3 {Pct(_rankHistClean[1], _rankNClean)} · " +
                 $"4-10 {Pct(_rankHistClean[2], _rankNClean)} · 11-50 {Pct(_rankHistClean[3], _rankNClean)} · " +
                 $"51+ {Pct(_rankHistClean[4], _rankNClean)}]");
 
             Logger.Info?.Print(LogClass.Gpu,
-                $"MVPP CTXPROBE RANG · intruses : moyenne " +
-                $"{(_rankNIntr > 0 ? (float)_rankSumIntr / _rankNIntr : 0f):0.#} sur {_rankNIntr} " +
-                $"[rang1 {Pct(_rankHistIntr[0], _rankNIntr)} · 2-3 {Pct(_rankHistIntr[1], _rankNIntr)} · " +
+                $"MVPP CTXPROBE RANK · intruders: mean " +
+                $"{(_rankNIntr > 0 ? (float)_rankSumIntr / _rankNIntr : 0f):0.#} over {_rankNIntr} " +
+                $"[rank1 {Pct(_rankHistIntr[0], _rankNIntr)} · 2-3 {Pct(_rankHistIntr[1], _rankNIntr)} · " +
                 $"4-10 {Pct(_rankHistIntr[2], _rankNIntr)} · 11-50 {Pct(_rankHistIntr[3], _rankNIntr)} · " +
                 $"51+ {Pct(_rankHistIntr[4], _rankNIntr)}]");
 
             for (int i = 0; i < _intrN; i++)
             {
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP CTXPROBE INTRUSE #{i} : pas {_intrDist[i]:0.0} u · " +
-                    $"depuis [{_intrPx[i]:0.0} {_intrPy[i]:0.0} {_intrPz[i]:0.0}] · " +
-                    $"vue {_intrCount[i]} fois");
+                    $"MVPP CTXPROBE INTRUDER #{i} : step {_intrDist[i]:0.0} u · " +
+                    $"from [{_intrPx[i]:0.0} {_intrPy[i]:0.0} {_intrPz[i]:0.0}] · " +
+                    $"seen {_intrCount[i]} times");
             }
 
             if (_intrOverflow > 0)
             {
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP CTXPROBE INTRUSES : {_intrOverflow} valeurs distinctes non comptees (table pleine)");
+                    $"MVPP CTXPROBE INTRUDERS : {_intrOverflow} distinct values not counted (table full)");
             }
 
-            Dump("CONTEXTE DE LECTURE", _readCtx, true);
-            Dump("PASSES QUALIFIANTES", _qualCtx, false);
+            Dump("READ CONTEXT", _readCtx, true);
+            Dump("QUALIFYING PASSES", _qualCtx, false);
         }
 
         private static string Pct(int n, int total)
@@ -402,11 +402,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 Logger.Info?.Print(LogClass.Gpu,
                     $"MVPP CTXPROBE {title} #{i} : " +
-                    $"COLOR {(c.Fmt < 0 ? "aucune" : $"{(GAL.Format)c.Fmt} {c.CW}x{c.CH} @0x{c.ColorAddr:X}")} · " +
+                    $"COLOR {(c.Fmt < 0 ? "none" : $"{(GAL.Format)c.Fmt} {c.CW}x{c.CH} @0x{c.ColorAddr:X}")} · " +
                     $"DEPTH {c.DW}x{c.DH} @0x{c.DepthAddr:X} · " +
-                    $"rang {c.MinRank}-{c.MaxRank} · {c.Reads} vues" +
+                    $"rank {c.MinRank}-{c.MaxRank} · {c.Reads} seen" +
                     (withIntruders
-                        ? $" · {c.Intruders} intruses · pas max {c.MaxDist:0.#} u"
+                        ? $" · {c.Intruders} intruders · max step {c.MaxDist:0.#} u"
                         : ""));
             }
         }

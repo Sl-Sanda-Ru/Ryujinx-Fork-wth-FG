@@ -298,7 +298,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     $"MVPP VPPROBE: rt {entry.Key.W}x{entry.Key.H} draws={s.Draws} narrow={s.Narrow} short={s.Short} " +
                     $"tfOff={s.TransformOff} vpW=[{s.MinW:F1}..{s.MaxW:F1}] vpH=[{s.MinH:F1}..{s.MaxH:F1}] " +
                     $"vpX=[{s.MinX:F1}..{s.MaxX:F1}] vpY=[{s.MinY:F1}..{s.MaxY:F1}] " +
-                    $"margeG={leftMin:F1} margeD={rightMin:F1} " +
+                    $"marginL={leftMin:F1} marginR={rightMin:F1} " +
                     $"| sciOn={s.ScissorOn} sciCuts={s.ScissorCuts} sciX=[{s.SciMinX1}..{s.SciMaxX1}][{s.SciMinX2}..{s.SciMaxX2}] " +
                     $"scrW=[{s.ScrMinW}..{s.ScrMaxW}] scrH=[{s.ScrMinH}..{s.ScrMaxH}] " +
                     $"|| CLIP zero={s.ClipZero} full={s.ClipFull} CUTS={s.ClipCuts} " +
@@ -326,7 +326,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             if (_addrBindings > 0)
             {
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP ADDRPROBE: {_addrBindings} bindings echantillonnes | U: {DescribeModes(_addrU)} | V: {DescribeModes(_addrV)}");
+                    $"MVPP ADDRPROBE: {_addrBindings} sampled bindings | U: {DescribeModes(_addrU)} | V: {DescribeModes(_addrV)}");
 
                 Array.Clear(_addrU);
                 Array.Clear(_addrV);
@@ -357,11 +357,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 if (substitue)
                 {
-                    sb.Append("(SUBSTITUE)");
+                    sb.Append("(SUBSTITUTED)");
                 }
             }
 
-            return sb.Length > 0 ? sb.ToString() : "aucun";
+            return sb.Length > 0 ? sb.ToString() : "none";
         }
 
     }

@@ -245,7 +245,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _hudlessCopyFmt = fmt;
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP-HUDLESSFEED: texture de destination creee {w}x{h} {fmt}.");
+                        $"MVPP-HUDLESSFEED: destination texture created {w}x{h} {fmt}.");
                 }
 
                 host.CopyTo(_hudlessCopy, 0, 0);
@@ -257,7 +257,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             {
                 if (++_hudlessCopyFails <= 3)
                 {
-                    Logger.Warning?.Print(LogClass.Gpu, $"MVPP-HUDLESSFEED: copie echouee: {e.Message}");
+                    Logger.Warning?.Print(LogClass.Gpu, $"MVPP-HUDLESSFEED: copy failed: {e.Message}");
                 }
             }
         }
@@ -301,18 +301,18 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                              $"{_epochTex.Info.FormatInfo.Format}_at{addr:X}.bin";
                 System.IO.File.WriteAllBytes(System.IO.Path.Combine(dir, nom), data.Get().ToArray());
 
-                Logger.Info?.Print(LogClass.Gpu, $"MVPP-EPOCHDUMP: {nom} ecrit a la FERMETURE de son epoque.");
+                Logger.Info?.Print(LogClass.Gpu, $"MVPP-EPOCHDUMP: {nom} written at the CLOSE of its epoch.");
 
                 if (++_dumpSeq >= 12)
                 {
                     _dumpDone = true;
-                    Logger.Info?.Print(LogClass.Gpu, "MVPP-EPOCHDUMP: termine (12 epoques capturees), sonde desarmee.");
+                    Logger.Info?.Print(LogClass.Gpu, "MVPP-EPOCHDUMP: done (12 epochs captured), probe disarmed.");
                 }
             }
             catch (Exception e)
             {
                 _dumpDone = true;
-                Logger.Warning?.Print(LogClass.Gpu, $"MVPP-EPOCHDUMP: abandonne apres erreur: {e.Message}");
+                Logger.Warning?.Print(LogClass.Gpu, $"MVPP-EPOCHDUMP: abandoned after error: {e.Message}");
             }
         }
 
@@ -411,7 +411,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     Logger.Info?.Print(LogClass.Gpu,
                         $"MVPP-UIPROBE f{_frameNo} epoch{i}: RT@0x{e.Addr:X} {e.Fmt} {e.W}x{e.H} " +
                         $"scale={e.Scale:0.##} depth={e.AnyDepth} blend={e.AnyBlend} draws={e.Draws}" +
-                        (e.NoDepthDraws > 0 ? $"  >>> SANS-DEPTH {e.NoDepthDraws} (des le n°{e.FirstNoDepthAt}) = CANDIDAT HUD" : ""));
+                        (e.NoDepthDraws > 0 ? $"  >>> NO-DEPTH {e.NoDepthDraws} (from #{e.FirstNoDepthAt}) = HUD CANDIDATE" : ""));
                 }
             }
 
@@ -432,8 +432,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     if (_hudlessRetenus <= 6)
                     {
                         Logger.Info?.Print(LogClass.Gpu,
-                            $"MVPP-HUDLESS elu: @0x{_hudlessBestAddr:X} {_hudlessBestDraws} dessins " +
-                            $"(epoque n°{_hudlessBestRank}), {_hudlessInFrame} candidat(s) dans l'image.");
+                            $"MVPP-HUDLESS elected: @0x{_hudlessBestAddr:X} {_hudlessBestDraws} draws " +
+                            $"(epoch #{_hudlessBestRank}), {_hudlessInFrame} candidate(s) in the frame.");
                     }
                 }
 
@@ -449,8 +449,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     }
 
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP-HUDLESS AUCUN CANDIDAT sur cette image ({_epochs.Count} epoques) : " +
-                        (vu.Length > 0 ? vu.ToString().TrimEnd() : "aucune epoque"));
+                        $"MVPP-HUDLESS NO CANDIDATE in this frame ({_epochs.Count} epochs): " +
+                        (vu.Length > 0 ? vu.ToString().TrimEnd() : "no epoch"));
                 }
 
                 _hudlessInFrame = 0;
@@ -462,11 +462,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 {
                     _hudlessLogMs = now;
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP-HUDLESS: {_hudlessHits} elus sur {_hudlessFrames} images " +
-                        $"({(_hudlessFrames > 0 ? 100f * _hudlessHits / _hudlessFrames : 0f):0.0}% - doit valoir 100), " +
-                        $"images ou plusieurs candidats se presentaient={_hudlessMultiple} " +
-                        $"(l'election en garde UN, c'est desormais informatif), " +
-                        $"largeur de rendu retenue={_renderWidthSeen}.");
+                        $"MVPP-HUDLESS: {_hudlessHits} elected over {_hudlessFrames} frames " +
+                        $"({(_hudlessFrames > 0 ? 100f * _hudlessHits / _hudlessFrames : 0f):0.0}% - should be 100), " +
+                        $"frames with several candidates={_hudlessMultiple} " +
+                        $"(the election keeps ONE, this is now informational), " +
+                        $"render width kept={_renderWidthSeen}.");
                     _hudlessHits = 0;
                     _hudlessFrames = 0;
                     _hudlessMultiple = 0;

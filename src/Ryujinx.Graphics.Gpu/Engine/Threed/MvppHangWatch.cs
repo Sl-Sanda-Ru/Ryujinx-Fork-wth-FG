@@ -36,8 +36,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 t.Start();
 
                 Logger.Info?.Print(LogClass.Gpu,
-                    $"MVPP HANGWATCH : surveillance armee (silence d'affichage de {StallMs} ms = gel). " +
-                    "Elle observe seulement, elle ne repare rien.");
+                    $"MVPP HANGWATCH : watchdog ARMED (display silence of {StallMs} ms = hang). " +
+                    "It only observes, it fixes nothing.");
             }
         }
 
@@ -58,8 +58,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                         _inStall = false;
 
                         Logger.Warning?.Print(LogClass.Gpu,
-                            $"MVPP HANGWATCH : l'affichage est REPARTI apres {silence} ms de silence " +
-                            "-- ce n'etait donc pas definitif. Noter ce qui se passait a l'ecran.");
+                            $"MVPP HANGWATCH : display RESUMED after {silence} ms of silence " +
+                            "-- so it was not permanent. Note what was happening on screen.");
                     }
 
                     continue;
@@ -74,11 +74,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     _drawsAtStall = draws;
 
                     Logger.Warning?.Print(LogClass.Gpu,
-                        $"MVPP HANGWATCH : AUCUNE IMAGE PRESENTEE depuis {silence} ms. " +
-                        $"Compteur de dessins a cet instant : {draws}. " +
-                        "Prochaine ligne dans quelques secondes -- si ce compteur a AVANCE, c'est la " +
-                        "PRESENTATION qui est bloquee (le fil graphique vit) ; s'il est FIGE, c'est le " +
-                        "fil graphique lui-meme qui est coince.");
+                        $"MVPP HANGWATCH : NO FRAME PRESENTED for {silence} ms. " +
+                        $"Draw counter at this moment: {draws}. " +
+                        "Next line in a few seconds -- if this counter has ADVANCED, it is " +
+                        "PRESENTATION that is blocked (the GPU thread is alive); if it is FROZEN, it is the " +
+                        "GPU thread itself that is stuck.");
 
                     continue;
                 }
@@ -94,11 +94,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 _drawsAtStall = draws;
 
                 Logger.Warning?.Print(LogClass.Gpu,
-                    $"MVPP HANGWATCH : gel de {silence / 1000} s. Dessins depuis la derniere ligne : " +
+                    $"MVPP HANGWATCH : hang of {silence / 1000} s. Draws since the last line: " +
                     $"{delta} ⇒ " +
                     (delta > 0
-                        ? "le fil graphique VIT, c'est la PRESENTATION qui est bloquee (famille A)."
-                        : "le fil graphique est COINCE lui aussi (famille B)."));
+                        ? "the GPU thread is ALIVE, PRESENTATION is what is blocked (family A)."
+                        : "the GPU thread is STUCK too (family B)."));
             }
         }
     }

@@ -89,11 +89,11 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 if (_wLogMs != 0 && _wHolds > 0)
                 {
                     Logger.Info?.Print(LogClass.Gpu,
-                        $"MVPP extpred fenetre: holds={_wHolds} qualifies={_wQualifies} " +
-                        $"resolus={_wResolus} sous-plancher={_wSousPlancher} " +
-                        $"sur-plafond={_wSurPlafond} sans-paire={_wSansPaire} " +
-                        $"enchaines={_wEnchaines} tp={_wTp} inv-ratees={_wInvRatees} " +
-                        $"chaines2+={_wChaines2}");
+                        $"MVPP extpred window: holds={_wHolds} qualifies={_wQualifies} " +
+                        $"resolved={_wResolus} below-floor={_wSousPlancher} " +
+                        $"above-cap={_wSurPlafond} no-pair={_wSansPaire} " +
+                        $"chained={_wEnchaines} tp={_wTp} inv-missed={_wInvRatees} " +
+                        $"chains2+={_wChaines2}");
                 }
 
                 _wLogMs = now;
@@ -193,7 +193,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                     $"MVPP extpred: errE-pos={errEpos} errE-rot={errErot:0.####} " +
                     $"errA-pos={errApos} errA-rot={errArot:0.####} " +
                     $"step-pos={(_pStepPos >= 0f ? _pStepPos.ToString("0.###") : "?")} " +
-                    $"step-rot={_pStepRot:0.####} chaine={chainLen} tp={(_pTpNear ? "oui" : "non")}");
+                    $"step-rot={_pStepRot:0.####} chain={chainLen} tp={(_pTpNear ? "yes" : "no")}");
             }
         }
 

@@ -1381,10 +1381,16 @@ namespace Ryujinx.Ava.Systems
             }
 
             int shaderCompiles = Graphics.Vulkan.PerformanceOverlay.RecentShaderCompiles;
+            int pipelineCompiles = Graphics.Vulkan.PerformanceOverlay.RecentPipelineCompiles;
 
             if (shaderCompiles != 0)
             {
                 text += string.Create(CultureInfo.InvariantCulture, $"\nCOMPILING SHADERS ({shaderCompiles})");
+            }
+
+            if (pipelineCompiles != 0)
+            {
+                text += string.Create(CultureInfo.InvariantCulture, $"\nCOMPILING PIPELINES ({pipelineCompiles})");
             }
 
             Graphics.Vulkan.PerformanceOverlay.SetText(text);

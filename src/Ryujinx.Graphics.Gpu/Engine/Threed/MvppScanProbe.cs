@@ -237,7 +237,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 sb.Append($" (+{_depthFormOverflow} draws on overflow forms)");
             }
 
-            sb.Append(" | COULEUR:");
+            sb.Append(" | COLOR:");
 
             if (_colorFormCount == 0)
             {
@@ -884,7 +884,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             if (lockedIdx >= 0)
             {
                 winner = lockedIdx;
-                mode = "VERROU";
+                mode = "LOCKED";
             }
             else if (elected >= 0)
             {
@@ -892,7 +892,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
                 bool trustworthy = targetAspect > 0f && bestMotion > 0f && _lastScanOnMainPass;
 
-                mode = trustworthy ? (_hasLock ? "RE-ELU" : "ELU") : "PROVISOIRE";
+                mode = trustworthy ? (_hasLock ? "RE-ELECTED" : "ELECTED") : "PROVISIONAL";
 
                 if (trustworthy)
                 {
@@ -904,8 +904,8 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
             else
             {
                 AppendDetail(ref detail, ref detailLines,
-                    $"VERDICT: aucun candidat retenu ({_vpSoloCount} bruts, {considered} au bon aspect, " +
-                    $"{movers} mobiles, cible aspect {targetAspect:0.###}, meilleur mouvement {bestMotion:0.##})");
+                    $"VERDICT: no candidate kept ({_vpSoloCount} raw, {considered} at the right aspect, " +
+                    $"{movers} moving, target aspect {targetAspect:0.###}, best motion {bestMotion:0.##})");
 
                 return;
             }
@@ -914,23 +914,23 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
 
             if (bestMotion <= 0f)
             {
-                mode = "CHAUFFE";
+                mode = "WARMING";
             }
 
-            string pass = _lastScanOnMainPass ? "" : " [hors passe scene]";
+            string pass = _lastScanOnMainPass ? "" : " [outside scene pass]";
 
             string divergence = lockedIdx >= 0 && elected >= 0 && elected != lockedIdx && electedVotes > lockedVotes
-                ? $" | DIVERGENCE: le consensus dirait stage{_vpSolos[elected].Stage} cbuf{_vpSolos[elected].Slot} " +
+                ? $" | DIVERGENCE: the consensus would say stage{_vpSolos[elected].Stage} cbuf{_vpSolos[elected].Slot} " +
                   $"+0x{_vpSolos[elected].Offset:X3} campos=[{_vpSolos[elected].X:0.#} {_vpSolos[elected].Y:0.#} " +
-                  $"{_vpSolos[elected].Z:0.#}] ({electedVotes} voix contre {lockedVotes})"
+                  $"{_vpSolos[elected].Z:0.#}] ({electedVotes} votes vs {lockedVotes})"
                 : "";
 
             AppendDetail(ref detail, ref detailLines,
                 $"VERDICT [{mode}]: camera = stage{w.Stage} cbuf{w.Slot} +0x{w.Offset:X3}{(w.Transposed ? "^T" : "")} " +
                 $"@{w.Address:X10} rect={w.Straightness:0.##} " +
                 $"campos=[{w.X:0.#} {w.Y:0.#} {w.Z:0.#}] fx={w.Fx:0.###} aspect={w.Aspect:0.###} " +
-                $"mouvement={w.Motion:0.##} -- {(lockedIdx >= 0 ? lockedVotes : electedVotes)} sources d'accord, " +
-                $"{movers} mobiles sur {considered} au bon aspect ({_vpSoloCount} bruts){pass}{divergence}");
+                $"motion={w.Motion:0.##} -- {(lockedIdx >= 0 ? lockedVotes : electedVotes)} sources agreeing, " +
+                $"{movers} moving out of {considered} at the right aspect ({_vpSoloCount} raw){pass}{divergence}");
 
             if (MvppSoloCamera.TryGetPublishedForProbe(out System.Numerics.Matrix4x4 pubVp,
                     out float pubX, out float pubY, out float pubZ))
@@ -960,7 +960,7 @@ namespace Ryujinx.Graphics.Gpu.Engine.Threed
                 AppendDetail(ref detail, ref detailLines,
                     $"DIVERG: dpos={dpos:0.##} drot={drot:0.####} " +
                     $"pub=[{pubX:0.#} {pubY:0.#} {pubZ:0.#}] " +
-                    $"bornes={(bornesOk ? "OK" : "HORS")} n={_dgConsecutive}");
+                    $"bounds={(bornesOk ? "OK" : "OUT")} n={_dgConsecutive}");
             }
         }
 

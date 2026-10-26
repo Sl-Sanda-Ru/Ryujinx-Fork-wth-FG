@@ -346,7 +346,7 @@
                     <StackPanel Orientation="Horizontal"
                                 IsVisible="{Binding IsFsr3Selected}">
                         <TextBlock VerticalAlignment="Center"
-                                   ToolTip.Tip="AMD FSR 3.1 (toutes cartes Vulkan : NVIDIA, AMD, Intel). Upscaling temporel : le jeu est rendu plus petit puis reconstruit à la taille de l'écran. Le mode fixe la résolution de rendu au lancement, en proportion de l'échelle de résolution. amd_fidelityfx_vk.dll doit être dans le dossier fsr\. S'applique au prochain lancement.&#10;&#10;Temporal upscaling for any Vulkan GPU (NVIDIA, AMD, Intel): the game renders smaller and is rebuilt at screen size. The mode sets the render resolution at launch, as a fraction of your resolution scale. Needs amd_fidelityfx_vk.dll in the fsr\ folder. Applied on next app launch."
+                                   ToolTip.Tip="AMD FSR 3.1 (any Vulkan GPU: NVIDIA, AMD, Intel). Temporal upscaling: the game renders smaller and is rebuilt at screen size. The mode sets the render resolution at launch, as a fraction of your resolution scale. Needs amd_fidelityfx_vk.dll in the fsr\ folder. Applied on next app launch."
                                    Text="AMD FSR 3.1 quality (experimental)"
                                    Width="250" />
                         <ComboBox Width="350"
@@ -363,7 +363,7 @@
                     <StackPanel Orientation="Horizontal"
                                 IsVisible="{Binding !IsFsr3Selected}">
                         <TextBlock VerticalAlignment="Center"
-                                   ToolTip.Tip="NVIDIA DLSS / DLAA (RTX). Reconstruction par IA. S'applique au prochain lancement de l'app. / AI reconstruction; applied on next app launch."
+                                   ToolTip.Tip="NVIDIA DLSS / DLAA (RTX). AI reconstruction; applied on next app launch."
                                    Text="NVIDIA DLSS / DLAA (experimental)"
                                    Width="250" />
                         <ComboBox Width="350"
@@ -379,15 +379,15 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
-                                   ToolTip.Tip="Preset du modèle DLSS (choix libre, s'applique au prochain lancement) : K = défaut ; M = transformer récent (feuillage plus propre) ; L/J = variantes transformer ; F = CNN ultra-stable. / DLSS model preset (your choice, applied on next launch): K = default; M = newer transformer (cleaner foliage); L/J = transformer variants; F = ultra-stable CNN."
+                                   ToolTip.Tip="DLSS model preset (your choice, applied on next launch): K = default; M = newer transformer (cleaner foliage); L/J = transformer variants; F = ultra-stable CNN."
                                    Text="DLSS Model Preset"
                                    Width="250" />
                         <ComboBox Width="350"
                                   HorizontalContentAlignment="Left"
                                   IsEnabled="{Binding IsDlssMenuEnabled}"
                                   SelectedIndex="{Binding DlssPresetIndex}">
-                            <ComboBoxItem Content="Preset K (Transformer — défaut / default)" />
-                            <ComboBoxItem Content="Preset M (Transformer — récent / newest)" />
+                            <ComboBoxItem Content="Preset K (Transformer — default)" />
+                            <ComboBoxItem Content="Preset M (Transformer — newest)" />
                             <ComboBoxItem Content="Preset L (Transformer)" />
                             <ComboBoxItem Content="Preset J (Transformer)" />
                             <ComboBoxItem Content="Preset F (CNN — ultra-stable)" />
@@ -395,7 +395,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
-                                   ToolTip.Tip="DLSS Frame Generation (RTX 40/50, nvngx_dlssg.dll requis / required). Génère des images supplémentaires pour un affichage 2x ou 3x plus fluide. S'applique au prochain lancement. / Generates extra frames for a 2x or 3x smoother display; applied on next app launch."
+                                   ToolTip.Tip="DLSS Frame Generation (RTX 40/50, nvngx_dlssg.dll required). Generates extra frames for a 2x or 3x smoother display; applied on next app launch."
                                    Text="DLSS Frame Generation"
                                    Width="250" />
                         <ComboBox Width="350"
@@ -409,7 +409,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
-                                   ToolTip.Tip="Netteté appliquée après le DLSS ou le FSR 3.1 (RCAS, comme le filtre FSR). 0 = désactivée. Trop haut = halos et scintillement en mouvement. S'applique immédiatement, même en jeu. / Sharpening applied after DLSS or FSR 3.1 (RCAS, same as the FSR filter). 0 = off. Too high = halos and shimmer in motion. Applies immediately, in-game included."
+                                   ToolTip.Tip="Sharpening applied after DLSS or FSR 3.1 (RCAS, same as the FSR filter). 0 = off. Too high = halos and shimmer in motion. Applies immediately, in-game included."
                                    Text="Upscaler Sharpening"
                                    Width="250" />
                         <Slider Width="300"
@@ -426,15 +426,15 @@
                     </StackPanel>
                     <CheckBox IsChecked="{Binding EnableFsrFrameGen}"
                               IsEnabled="{Binding IsFsrFrameGenMenuEnabled}"
-                              ToolTip.Tip="AMD FSR Frame Generation (FidelityFX, toutes cartes Vulkan — pas besoin de RTX). Interpole une image supplémentaire entre deux images rendues : le jeu continue de tourner à son rythme, mais deux fois plus d'images atteignent l'écran. Exclusif avec DLSS Frame Generation : les deux ne peuvent pas partager le swapchain, et FSR gagne. Force la VSync hôte sur Immediate. amd_fidelityfx_vk.dll doit être dans le dossier fsr\. S'applique au prochain lancement.&#10;&#10;Interpolates one extra frame between two rendered ones: the game still runs at its own pace, but twice as many frames reach the screen. Mutually exclusive with DLSS Frame Generation — the two cannot share the swapchain, and FSR wins. Forces the host present mode to Immediate. Needs amd_fidelityfx_vk.dll in the fsr\ folder. Applied on next app launch.">
+                              ToolTip.Tip="AMD FSR Frame Generation (FidelityFX, any Vulkan GPU — no RTX needed). Interpolates one extra frame between two rendered ones: the game still runs at its own pace, but twice as many frames reach the screen. Mutually exclusive with DLSS Frame Generation — the two cannot share the swapchain, and FSR wins. Forces the host present mode to Immediate. Needs amd_fidelityfx_vk.dll in the fsr\ folder. Applied on next app launch.">
                         <TextBlock Text="AMD FSR Frame Generation (experimental)" />
                     </CheckBox>
                     <CheckBox IsChecked="{Binding EnableDofSkip}"
-                              ToolTip.Tip="CE QUE ÇA FAIT&#10;• Suivi de caméra renforcé : lecture de la caméra même quand le jeu la range ailleurs que d'habitude, rejet des matrices trompeuses (ciel, reflets), tolérance aux téléportations et aux changements de plan.&#10;• Vecteurs de mouvement plus propres : le tremblement d'échantillonnage n'est plus confondu avec du mouvement réel, et la dérive du ciel n'est mesurée que caméra calme.&#10;&#10;EXPÉRIMENTAL : validé sur une seule famille de moteur (Xenoblade Chronicles 2). Sur d'autres configurations, il peut au contraire ajouter du tremblement en mouvement — si c'est le cas, décochez.&#10;Le code reste GÉNÉRIQUE : tout est reconnu par la forme du pipeline, jamais par le nom d'un jeu.&#10;Décochée par défaut. S'applique au prochain lancement.&#10;&#10;WHAT THIS DOES&#10;• Stronger camera tracking: reads the camera even when a game stores it in an unusual place, rejects misleading matrices (sky, reflections), tolerates teleports and scene cuts.&#10;• Cleaner motion vectors: the sampling jitter is no longer mistaken for real motion, and sky drift is only measured while the camera is calm.&#10;&#10;EXPERIMENTAL: validated on one engine family only (Xenoblade Chronicles 2). On other setups it can add trembling in motion instead — if it does, untick it.&#10;The code stays GENERIC: everything is matched by pipeline shape, never by game name.&#10;Off by default. Applied on next app launch.">
+                              ToolTip.Tip="WHAT THIS DOES&#10;• Stronger camera tracking: reads the camera even when a game stores it in an unusual place, rejects misleading matrices (sky, reflections), tolerates teleports and scene cuts.&#10;• Cleaner motion vectors: the sampling jitter is no longer mistaken for real motion, and sky drift is only measured while the camera is calm.&#10;&#10;EXPERIMENTAL: validated on one engine family only (Xenoblade Chronicles 2). On other setups it can add trembling in motion instead — if it does, untick it.&#10;The code stays GENERIC: everything is matched by pipeline shape, never by game name.&#10;Off by default. Applied on next app launch.">
                         <TextBlock Text="Advanced motion stack (experimental)" />
                     </CheckBox>
                     <CheckBox IsChecked="{Binding EnableForceMips}"
-                              ToolTip.Tip="Fabrique les chaînes de mipmaps que beaucoup de jeux n'ont pas : supprime le scintillement des textures lointaines à l'upscale. Générique, automatique, s'applique au prochain lancement. / Builds the mipmap chains many games ship without, removing distant texture shimmer when upscaling. Generic, automatic, applied on next app launch.">
+                              ToolTip.Tip="Builds the mipmap chains many games ship without, removing distant texture shimmer when upscaling. Generic, automatic, applied on next app launch.">
                         <TextBlock Text="Runtime mipmap generation (experimental)" />
                     </CheckBox>
                     <StackPanel Orientation="Horizontal">

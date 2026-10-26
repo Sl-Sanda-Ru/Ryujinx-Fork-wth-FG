@@ -187,7 +187,7 @@ namespace Ryujinx.HLE.HOS.Services
                     if (probeThis)
                     {
                         Logger.Info?.Print(LogClass.KernelIpc,
-                            $"IPCPROBE [fil {context.Thread?.ThreadUid ?? 0}] " +
+                            $"IPCPROBE [thread {context.Thread?.ThreadUid ?? 0}] " +
                             $"{service.GetType().Name}.{processRequest.Name} -> {result}");
                     }
                 }

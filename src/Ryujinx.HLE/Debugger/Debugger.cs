@@ -114,7 +114,7 @@ namespace Ryujinx.HLE.Debugger
             }
 
             System.Text.StringBuilder sb = new();
-            sb.AppendLine($"WATCH: {_watchVus} recherches vues. 32 dernieres cles (la plus recente en premier) :");
+            sb.AppendLine($"WATCH: {_watchVus} lookups seen. Last 32 keys (most recent first):");
 
             for (int k = 0; k < _dernieresCles.Length; k++)
             {
@@ -125,7 +125,7 @@ namespace Ryujinx.HLE.Debugger
                     continue;
                 }
 
-                sb.AppendLine($"   cle=0x{_dernieresCles[i]:X16}  appelee depuis 0x{_dernieresAdr[i]:X16}");
+                sb.AppendLine($"   key=0x{_dernieresCles[i]:X16}  called from 0x{_dernieresAdr[i]:X16}");
             }
 
             Logger.Error?.Print(LogClass.GdbStub, sb.ToString());
@@ -150,7 +150,7 @@ namespace Ryujinx.HLE.Debugger
                 }
 
                 System.Text.StringBuilder sb = new();
-                sb.AppendLine($"WATCH: APPEL FATAL a 0x{address:X16} apres {_watchVus} passages valides.");
+                sb.AppendLine($"WATCH: FATAL CALL at 0x{address:X16} after {_watchVus} valid passes.");
 
                 for (int r = 0; r <= 30; r++)
                 {
@@ -164,7 +164,7 @@ namespace Ryujinx.HLE.Debugger
 
                 Logger.Error?.Print(LogClass.GdbStub, sb.ToString());
                 Logger.Error?.Print(LogClass.GdbStub,
-                    $"WATCH: X30 (adresse de retour REELLE) = 0x{ctx.GetX(30):X16}");
+                    $"WATCH: X30 (ACTUAL return address) = 0x{ctx.GetX(30):X16}");
                 Logger.Flush();
 
                 return;

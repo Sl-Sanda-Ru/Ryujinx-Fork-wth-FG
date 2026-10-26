@@ -426,7 +426,7 @@ namespace Ryujinx.HLE.Loaders.Processes
                             System.Globalization.CultureInfo.InvariantCulture, out uint mot))
                     {
                         Logger.Error?.Print(LogClass.Loader,
-                            $"PATCHINSTR mal forme : {paire} (attendu <adresse hex>=<mot hex>)");
+                            $"PATCHINSTR malformed: {paire} (expected <hex address>=<hex word>)");
 
                         continue;
                     }
@@ -441,12 +441,12 @@ namespace Ryujinx.HLE.Loaders.Processes
 
                         Logger.Warning?.Print(LogClass.Loader,
                             apres == mot
-                                ? $"PATCHINSTR 0x{adr:X16} : {avant:X8} -> {apres:X8} APPLIQUE"
-                                : $"PATCHINSTR 0x{adr:X16} : ECHEC, lu {apres:X8} au lieu de {mot:X8}");
+                                ? $"PATCHINSTR 0x{adr:X16} : {avant:X8} -> {apres:X8} APPLIED"
+                                : $"PATCHINSTR 0x{adr:X16} : FAILED, read {apres:X8} instead of {mot:X8}");
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error?.Print(LogClass.Loader, $"PATCHINSTR 0x{adr:X16} impossible : {ex.Message}");
+                        Logger.Error?.Print(LogClass.Loader, $"PATCHINSTR 0x{adr:X16} failed: {ex.Message}");
                     }
                 }
             }
